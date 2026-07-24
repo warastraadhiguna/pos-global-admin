@@ -93,15 +93,7 @@ input, select { font-family: inherit; }
   overflow-y: auto;
 }
 .admin-nav .brand { padding: 0 20px 20px; font-weight: 700; font-size: 16px; }
-.admin-nav .nav-group { margin-bottom: 14px; }
-.admin-nav .nav-group-label {
-  padding: 8px 20px 4px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #6b7280;
-}
+.admin-nav .nav-group { margin-bottom: 2px; }
 .admin-nav button {
   display: block;
   width: 100%;
@@ -111,9 +103,41 @@ input, select { font-family: inherit; }
   color: #d1d5db;
   padding: 10px 20px;
   font-size: 14px;
+  cursor: pointer;
 }
 .admin-nav button.active { background: #1f2937; color: #fff; font-weight: 600; }
 .admin-nav button:hover { background: #1f2937; }
+
+/* Header grup — sekaligus tombol buka/tutup, bukan cuma label statis. */
+.admin-nav .nav-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+}
+.admin-nav .nav-group-header:hover { background: none; color: #9ca3af; }
+/* Grup yang memuat halaman aktif tetap kelihatan jelas walau tertutup —
+   supaya user tidak kehilangan orientasi "saya lagi di mana" saat grup lain
+   yang dibuka. */
+.admin-nav .nav-group-header.has-active { color: #93c5fd; }
+.admin-nav .nav-group-chevron { flex-shrink: 0; transition: transform 0.15s ease; }
+.admin-nav .nav-group-chevron.open { transform: rotate(90deg); }
+
+.admin-nav .nav-group-items { padding-bottom: 4px; }
+.admin-nav .nav-group-items button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 24px;
+}
+.admin-nav .nav-item-icon { flex-shrink: 0; opacity: 0.8; }
+.admin-nav .nav-group-items button.active .nav-item-icon { opacity: 1; }
 
 .admin-content { padding: 24px; }
 

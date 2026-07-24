@@ -79,4 +79,38 @@ export const api = {
   listAllPaymentMethods: () => request('/payment-methods/all'),
   createPaymentMethod: (payload) => request('/payment-methods', { method: 'POST', body: payload }),
   updatePaymentMethod: (id, payload) => request(`/payment-methods/${id}`, { method: 'PUT', body: payload }),
+
+  listAccountingAccounts: () => request('/admin/accounting/accounts'),
+  postExpense: (payload) => request('/admin/accounting/expenses', { method: 'POST', body: payload }),
+  postOwnerDraw: (payload) => request('/admin/accounting/owner-draws', { method: 'POST', body: payload }),
+  listFixedAssets: () => request('/admin/accounting/fixed-assets'),
+  createFixedAsset: (payload) => request('/admin/accounting/fixed-assets', { method: 'POST', body: payload }),
+  runDepreciation: (payload) => request('/admin/accounting/fixed-assets/depreciation/run', { method: 'POST', body: payload }),
+
+  previewInventoryOpeningBalance: () => request('/admin/accounting/opening-balances/inventory/preview'),
+  runInventoryOpeningBalance: (payload) => request('/admin/accounting/opening-balances/inventory/run', { method: 'POST', body: payload }),
+
+  getTrialBalance: (asOfDate) => request(`/admin/accounting/reports/trial-balance?asOfDate=${encodeURIComponent(asOfDate)}`),
+  getIncomeStatement: (startDate, endDate) => request(`/admin/accounting/reports/income-statement?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+  getBalanceSheet: (asOfDate) => request(`/admin/accounting/reports/balance-sheet?asOfDate=${encodeURIComponent(asOfDate)}`),
+  getCashFlow: (startDate, endDate) => request(`/admin/accounting/reports/cash-flow?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+  getGeneralLedger: (accountId, startDate, endDate) => request(`/admin/accounting/reports/general-ledger?accountId=${encodeURIComponent(accountId)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+
+  listAllSuppliers: () => request('/admin/suppliers/all'),
+  createSupplier: (payload) => request('/admin/suppliers', { method: 'POST', body: payload }),
+  updateSupplier: (id, payload) => request(`/admin/suppliers/${id}`, { method: 'PUT', body: payload }),
+
+  listPurchases: () => request('/admin/purchases'),
+  getPurchase: (id) => request(`/admin/purchases/${id}`),
+  createPurchase: (payload) => request('/admin/purchases', { method: 'POST', body: payload }),
+  voidPurchase: (id, payload) => request(`/admin/purchases/${id}/void`, { method: 'POST', body: payload }),
+
+  listPurchaseReturns: () => request('/admin/purchase-returns'),
+  createPurchaseReturn: (payload) => request('/admin/purchase-returns', { method: 'POST', body: payload }),
+
+  listStockOpnames: () => request('/admin/stock-opnames'),
+  getStockOpname: (id) => request(`/admin/stock-opnames/${id}`),
+  createStockOpname: (payload) => request('/admin/stock-opnames', { method: 'POST', body: payload }),
+  recordOpnamePhysicalCount: (opnameId, itemId, payload) => request(`/admin/stock-opnames/${opnameId}/items/${itemId}`, { method: 'PUT', body: payload }),
+  finalizeStockOpname: (id) => request(`/admin/stock-opnames/${id}/finalize`, { method: 'POST' }),
 };
