@@ -13,6 +13,8 @@ export default function ProductDetailScreen({ productId, onBack }) {
   const [newUnit, setNewUnit] = useState({ unitId: '', conversionFactor: '' });
   const [newBarcode, setNewBarcode] = useState({ unitId: '', barcode: '' });
   const [newPrice, setNewPrice] = useState({ unitId: '', priceLevelId: '', minQtyBase: '0', price: '' });
+  const [editingPriceId, setEditingPriceId] = useState(null);
+  const [editPriceDraft, setEditPriceDraft] = useState('');
 
   function reload() {
     api.getProduct(productId).then((d) => {
@@ -111,6 +113,35 @@ export default function ProductDetailScreen({ productId, onBack }) {
     }
   }
 
+  function startEditPrice(p) {
+    setEditingPriceId(p.id);
+    setEditPriceDraft(String(p.price));
+  }
+
+  async function submitEditPrice(priceId) {
+    if (editPriceDraft === '' || Number(editPriceDraft) < 0) return;
+    try {
+      await api.updatePrice(productId, priceId, { price: editPriceDraft });
+      setEditingPriceId(null);
+      setError(null);
+      flash('Harga diubah manual');
+      reload();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  // Kunci = lindungi baris harga ini dari update markup otomatis (Batch 3A).
+  // Toggle langsung tanpa form terpisah - aksi kecil, tidak butuh konfirmasi.
+  async function toggleLock(p) {
+    try {
+      await api.updatePrice(productId, p.id, { isLocked: !p.is_locked });
+      reload();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   if (!detail) return <div>Memuat...</div>;
 
   return (
@@ -193,19 +224,49 @@ export default function ProductDetailScreen({ productId, onBack }) {
 
       <div className="card">
         <h3 style={{ marginTop: 0 }}>Harga</h3>
+        <p style={{ color: '#666', fontSize: 13, marginTop: -8 }}>
+          Angka bisa berpecahan kalau berasal dari markup otomatis (HPP + markup%) — sengaja tidak dibulatkan.
+          Kunci baris supaya tidak ikut ditimpa saat markup otomatis menghitung ulang.
+        </p>
         <table>
-          <thead><tr><th>Satuan</th><th>Level</th><th>Min Qty (base)</th><th>Harga</th><th></th></tr></thead>
+          <thead><tr><th>Satuan</th><th>Level</th><th>Min Qty (base)</th><th>Harga</th><th>Kunci</th><th></th></tr></thead>
           <tbody>
             {detail.prices.map((p) => (
               <tr key={p.id}>
                 <td>{p.unit_name}</td>
                 <td>{p.price_level_name}</td>
                 <td>{Number(p.min_qty_base)}</td>
-                <td>Rp{Number(p.price).toLocaleString('id-ID')}</td>
+                <td>
+                  {editingPriceId === p.id ? (
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <input
+                        className="input"
+                        type="number"
+                        min="0"
+                        step="0.0001"
+                        value={editPriceDraft}
+                        onChange={(e) => setEditPriceDraft(e.target.value)}
+                        style={{ width: 130 }}
+                        autoFocus
+                      />
+                      <button className="btn-primary" onClick={() => submitEditPrice(p.id)}>Simpan</button>
+                      <button className="btn-secondary" onClick={() => setEditingPriceId(null)}>Batal</button>
+                    </div>
+                  ) : (
+                    <span onClick={() => startEditPrice(p)} style={{ cursor: 'pointer' }} title="Klik utk ubah manual">
+                      Rp{Number(p.price).toLocaleString('id-ID', { maximumFractionDigits: 4 })}
+                    </span>
+                  )}
+                </td>
+                <td>
+                  <label style={{ fontSize: 13 }}>
+                    <input type="checkbox" checked={!!p.is_locked} onChange={() => toggleLock(p)} /> {p.is_locked ? 'Terkunci' : '-'}
+                  </label>
+                </td>
                 <td><button className="btn-danger" onClick={() => removePrice(p.id)}>Hapus</button></td>
               </tr>
             ))}
-            {detail.prices.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', color: '#999', padding: 12 }}>Belum ada harga</td></tr>}
+            {detail.prices.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', color: '#999', padding: 12 }}>Belum ada harga</td></tr>}
           </tbody>
         </table>
         <form onSubmit={submitAddPrice} style={{ marginTop: 12 }}>
