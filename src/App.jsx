@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Package, Folder, Ruler, Tag, Banknote, CreditCard, Users, Truck,
   ShoppingCart, ClipboardCheck, Receipt, Building, BarChart, TrendingUp,
-  ChevronRight,
+  ChevronRight, Bell,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
 import LoginScreen from './screens/LoginScreen.jsx';
@@ -21,6 +21,7 @@ import AccountingReportsScreen from './screens/AccountingReportsScreen.jsx';
 import SuppliersScreen from './screens/SuppliersScreen.jsx';
 import PurchasesScreen from './screens/PurchasesScreen.jsx';
 import StockOpnameScreen from './screens/StockOpnameScreen.jsx';
+import PriceChangeNotificationsScreen from './screens/PriceChangeNotificationsScreen.jsx';
 
 const DEFAULT_VIEW = 'products';
 
@@ -62,6 +63,7 @@ const NAV_GROUPS = [
     label: 'Laporan',
     items: [
       { key: 'reports', label: 'Laporan Penjualan', icon: TrendingUp },
+      { key: 'priceChangeNotifications', label: 'Notifikasi Harga', icon: Bell },
     ],
   },
 ];
@@ -77,6 +79,15 @@ export default function App() {
   const [session, setSession] = useState(() => (getAuthToken() ? { token: getAuthToken() } : null));
   const [view, setView] = useState(DEFAULT_VIEW);
   const [selectedProductId, setSelectedProductId] = useState(null);
+  const [unreadPriceCount, setUnreadPriceCount] = useState(0);
+
+  // Refresh badge notifikasi harga tiap kali pindah halaman (murah, 1 query
+  // count) — supaya angkanya turun begitu admin selesai baca & tandai dibaca
+  // di halaman Notifikasi Harga, bukan cuma saat app baru dibuka.
+  useEffect(() => {
+    if (!session) return;
+    api.countUnreadPriceChangeNotifications().then((d) => setUnreadPriceCount(d.count)).catch(() => {});
+  }, [session, view]);
 
   // React state di level komponen navigasi — SENGAJA bukan localStorage
   // (state cuma bertahan selama sesi, direset lagi kalau halaman di-refresh).
@@ -139,6 +150,9 @@ export default function App() {
                       >
                         <Icon size={16} className="nav-item-icon" />
                         <span>{item.label}</span>
+                        {item.key === 'priceChangeNotifications' && unreadPriceCount > 0 && (
+                          <span className="badge active" style={{ marginLeft: 'auto' }}>{unreadPriceCount}</span>
+                        )}
                       </button>
                     );
                   })}
@@ -167,6 +181,7 @@ export default function App() {
         {view === 'fixedAssets' && <FixedAssetsScreen />}
         {view === 'accountingReports' && <AccountingReportsScreen />}
         {view === 'reports' && <ReportsScreen />}
+        {view === 'priceChangeNotifications' && <PriceChangeNotificationsScreen />}
       </div>
     </div>
   );

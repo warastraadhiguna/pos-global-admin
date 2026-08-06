@@ -49,6 +49,7 @@ export const api = {
 
   listPriceLevels: () => request('/price-levels'),
   createPriceLevel: (payload) => request('/price-levels', { method: 'POST', body: payload }),
+  updatePriceLevel: (id, payload) => request(`/price-levels/${id}`, { method: 'PUT', body: payload }),
 
   listProducts: () => request('/admin/products'),
   getProduct: (id) => request(`/admin/products/${id}`),
@@ -113,4 +114,11 @@ export const api = {
   createStockOpname: (payload) => request('/admin/stock-opnames', { method: 'POST', body: payload }),
   recordOpnamePhysicalCount: (opnameId, itemId, payload) => request(`/admin/stock-opnames/${opnameId}/items/${itemId}`, { method: 'PUT', body: payload }),
   finalizeStockOpname: (id) => request(`/admin/stock-opnames/${id}/finalize`, { method: 'POST' }),
+
+  getPricingSettings: () => request('/admin/pricing/settings'),
+  updatePricingSettings: (payload) => request('/admin/pricing/settings', { method: 'PUT', body: payload }),
+  listPriceChangeNotifications: () => request('/admin/pricing/notifications'),
+  countUnreadPriceChangeNotifications: () => request('/admin/pricing/notifications/unread-count'),
+  markPriceChangeNotificationRead: (id) => request(`/admin/pricing/notifications/${id}/read`, { method: 'PUT' }),
+  markAllPriceChangeNotificationsRead: () => request('/admin/pricing/notifications/read-all', { method: 'PUT' }),
 };
