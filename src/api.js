@@ -122,6 +122,9 @@ export const api = {
   recordOpnamePhysicalCount: (opnameId, itemId, payload) => request(`/admin/stock-opnames/${opnameId}/items/${itemId}`, { method: 'PUT', body: payload }),
   finalizeStockOpname: (id) => request(`/admin/stock-opnames/${id}/finalize`, { method: 'POST' }),
 
+  getStoreSettings: () => request('/store-settings'),
+  updateStoreSettings: (payload) => request('/store-settings', { method: 'PUT', body: payload }),
+
   getPricingSettings: () => request('/admin/pricing/settings'),
   updatePricingSettings: (payload) => request('/admin/pricing/settings', { method: 'PUT', body: payload }),
   listPriceChangeNotifications: () => request('/admin/pricing/notifications'),
