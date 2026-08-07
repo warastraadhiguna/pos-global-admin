@@ -1,6 +1,9 @@
-// IP/base URL server dikonfigurasi lewat .env (VITE_API_BASE_URL), bukan
-// hardcode — jaringan tiap toko bisa beda (Bagian 8).
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:4000/api';
+// Path RELATIF ("/api") — pos-admin SELALU disajikan dari server yang sama
+// dgn API-nya (server/src/app.js), jadi otomatis ikut host/IP apa pun yang
+// dipakai browser buat buka halaman ini. Absolut ke 127.0.0.1 sebelumnya
+// bikin gagal diakses dari komputer lain lewat IP LAN (fetch selalu nyasar
+// ke localhost komputer ITU SENDIRI, bukan server) — ditemukan 2026-08-07.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 const TOKEN_STORAGE_KEY = 'pos_admin_token';
 
 let authToken = localStorage.getItem(TOKEN_STORAGE_KEY) || null;
@@ -67,7 +70,11 @@ export const api = {
   updatePrice: (productId, priceId, payload) => request(`/admin/products/${productId}/prices/${priceId}`, { method: 'PUT', body: payload }),
   deletePrice: (productId, priceId) => request(`/admin/products/${productId}/prices/${priceId}`, { method: 'DELETE' }),
 
-  getDailySalesReport: (date) => request(`/admin/reports/daily-sales?date=${encodeURIComponent(date)}`),
+  getDailySalesReport: (startDate, endDate) =>
+    request(`/admin/reports/daily-sales?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+  getTransactionsReport: (startDate, endDate) =>
+    request(`/admin/reports/transactions?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+  getSaleDetail: (saleId) => request(`/sales/${saleId}`),
 
   listAllCashDenominations: () => request('/cash-denominations/all'),
   createCashDenomination: (payload) => request('/cash-denominations', { method: 'POST', body: payload }),
