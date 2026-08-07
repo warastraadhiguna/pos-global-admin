@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Package, Folder, Ruler, Tag, Banknote, CreditCard, Users, Truck,
   ShoppingCart, ClipboardCheck, Receipt, Building, BarChart, TrendingUp,
-  ChevronRight, Bell,
+  ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
 import LoginScreen from './screens/LoginScreen.jsx';
@@ -80,6 +80,9 @@ export default function App() {
   const [view, setView] = useState(DEFAULT_VIEW);
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [unreadPriceCount, setUnreadPriceCount] = useState(0);
+  // Sidebar collapse — cuma UI, sama seperti openGroups di bawah sengaja
+  // tidak persisten (reset tiap refresh), murni dikendalikan klik user.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   // Refresh badge notifikasi harga tiap kali pindah halaman (murah, 1 query
   // count) — supaya angkanya turun begitu admin selesai baca & tandai dibaca
@@ -121,47 +124,88 @@ export default function App() {
   }
 
   return (
-    <div className="admin-layout">
+    <div className={`admin-layout${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
       <nav className="admin-nav">
-        <div className="brand">POS Admin</div>
-        {NAV_GROUPS.map((group) => {
-          const isOpen = openGroups[group.label];
-          const hasActive = group.items.some((item) => item.key === view);
-          return (
-            <div className="nav-group" key={group.label}>
+        <div className="brand">
+          {!sidebarCollapsed && <span>POS Admin</span>}
+          <button
+            type="button"
+            className="nav-collapse-toggle"
+            onClick={() => setSidebarCollapsed((v) => !v)}
+            title={sidebarCollapsed ? 'Perluas menu' : 'Ciutkan menu'}
+          >
+            {sidebarCollapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
+          </button>
+        </div>
+        {sidebarCollapsed ? (
+          // Ciutkan: grup dilepas (tidak cukup ruang utk label grup), semua
+          // item dari semua grup diratakan jadi satu rel ikon, label pindah
+          // ke tooltip (title).
+          NAV_GROUPS.flatMap((group) => group.items).map((item) => {
+            const Icon = item.icon;
+            return (
               <button
+                key={item.key}
                 type="button"
-                className={`nav-group-header${hasActive ? ' has-active' : ''}`}
-                onClick={() => toggleGroup(group.label)}
-                aria-expanded={isOpen}
+                className={`nav-icon-btn${view === item.key ? ' active' : ''}`}
+                onClick={() => { setView(item.key); setSelectedProductId(null); }}
+                title={item.label}
               >
-                <span>{group.label}</span>
-                <ChevronRight size={14} className={`nav-group-chevron${isOpen ? ' open' : ''}`} />
+                <Icon size={18} />
+                {item.key === 'priceChangeNotifications' && unreadPriceCount > 0 && (
+                  <span className="nav-icon-badge">{unreadPriceCount}</span>
+                )}
               </button>
-              {isOpen && (
-                <div className="nav-group-items">
-                  {group.items.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.key}
-                        className={view === item.key ? 'active' : ''}
-                        onClick={() => { setView(item.key); setSelectedProductId(null); }}
-                      >
-                        <Icon size={16} className="nav-item-icon" />
-                        <span>{item.label}</span>
-                        {item.key === 'priceChangeNotifications' && unreadPriceCount > 0 && (
-                          <span className="badge active" style={{ marginLeft: 'auto' }}>{unreadPriceCount}</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-        <button onClick={handleLogout} style={{ marginTop: 20, color: '#fca5a5' }}>Keluar</button>
+            );
+          })
+        ) : (
+          NAV_GROUPS.map((group) => {
+            const isOpen = openGroups[group.label];
+            const hasActive = group.items.some((item) => item.key === view);
+            return (
+              <div className="nav-group" key={group.label}>
+                <button
+                  type="button"
+                  className={`nav-group-header${hasActive ? ' has-active' : ''}`}
+                  onClick={() => toggleGroup(group.label)}
+                  aria-expanded={isOpen}
+                >
+                  <span>{group.label}</span>
+                  <ChevronRight size={14} className={`nav-group-chevron${isOpen ? ' open' : ''}`} />
+                </button>
+                {isOpen && (
+                  <div className="nav-group-items">
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.key}
+                          className={view === item.key ? 'active' : ''}
+                          onClick={() => { setView(item.key); setSelectedProductId(null); }}
+                        >
+                          <Icon size={16} className="nav-item-icon" />
+                          <span>{item.label}</span>
+                          {item.key === 'priceChangeNotifications' && unreadPriceCount > 0 && (
+                            <span className="badge active" style={{ marginLeft: 'auto' }}>{unreadPriceCount}</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+        <button
+          type="button"
+          className={sidebarCollapsed ? 'nav-icon-btn' : ''}
+          onClick={handleLogout}
+          style={sidebarCollapsed ? { color: '#fca5a5', marginTop: 8 } : { marginTop: 20, color: '#fca5a5' }}
+          title="Keluar"
+        >
+          {sidebarCollapsed ? <LogOut size={18} /> : 'Keluar'}
+        </button>
       </nav>
       <div className="admin-content">
         {view === 'products' && !selectedProductId && <ProductsScreen onSelectProduct={setSelectedProductId} />}
