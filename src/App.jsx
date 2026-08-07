@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Package, Folder, Ruler, Tag, Banknote, CreditCard, Users, Truck,
   ShoppingCart, ClipboardCheck, Receipt, Building, BarChart, TrendingUp,
-  ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut, FileText,
+  ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut, FileText, Store,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
 import LoginScreen from './screens/LoginScreen.jsx';
@@ -23,6 +23,7 @@ import SuppliersScreen from './screens/SuppliersScreen.jsx';
 import PurchasesScreen from './screens/PurchasesScreen.jsx';
 import StockOpnameScreen from './screens/StockOpnameScreen.jsx';
 import PriceChangeNotificationsScreen from './screens/PriceChangeNotificationsScreen.jsx';
+import StoreSettingsScreen from './screens/StoreSettingsScreen.jsx';
 
 const DEFAULT_VIEW = 'products';
 
@@ -42,6 +43,7 @@ const NAV_GROUPS = [
     label: 'Administrasi',
     items: [
       { key: 'users', label: 'Kelola Pengguna', icon: Users },
+      { key: 'storeSettings', label: 'Pengaturan Toko', icon: Store },
     ],
   },
   {
@@ -223,6 +225,7 @@ export default function App() {
         {view === 'purchases' && <PurchasesScreen />}
         {view === 'stockOpname' && <StockOpnameScreen />}
         {view === 'users' && <UsersScreen />}
+        {view === 'storeSettings' && <StoreSettingsScreen />}
         {view === 'expenses' && <ExpensesScreen />}
         {view === 'fixedAssets' && <FixedAssetsScreen />}
         {view === 'accountingReports' && <AccountingReportsScreen />}
