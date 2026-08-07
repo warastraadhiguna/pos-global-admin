@@ -70,7 +70,11 @@ export const api = {
   updatePrice: (productId, priceId, payload) => request(`/admin/products/${productId}/prices/${priceId}`, { method: 'PUT', body: payload }),
   deletePrice: (productId, priceId) => request(`/admin/products/${productId}/prices/${priceId}`, { method: 'DELETE' }),
 
-  getDailySalesReport: (date) => request(`/admin/reports/daily-sales?date=${encodeURIComponent(date)}`),
+  getDailySalesReport: (startDate, endDate) =>
+    request(`/admin/reports/daily-sales?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+  getTransactionsReport: (startDate, endDate) =>
+    request(`/admin/reports/transactions?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+  getSaleDetail: (saleId) => request(`/sales/${saleId}`),
 
   listAllCashDenominations: () => request('/cash-denominations/all'),
   createCashDenomination: (payload) => request('/cash-denominations', { method: 'POST', body: payload }),

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Package, Folder, Ruler, Tag, Banknote, CreditCard, Users, Truck,
   ShoppingCart, ClipboardCheck, Receipt, Building, BarChart, TrendingUp,
-  ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut,
+  ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut, FileText,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
 import LoginScreen from './screens/LoginScreen.jsx';
@@ -12,6 +12,7 @@ import PriceLevelsScreen from './screens/PriceLevelsScreen.jsx';
 import ProductsScreen from './screens/ProductsScreen.jsx';
 import ProductDetailScreen from './screens/ProductDetailScreen.jsx';
 import ReportsScreen from './screens/ReportsScreen.jsx';
+import TransactionsReportScreen from './screens/TransactionsReportScreen.jsx';
 import CashDenominationsScreen from './screens/CashDenominationsScreen.jsx';
 import UsersScreen from './screens/UsersScreen.jsx';
 import PaymentMethodsScreen from './screens/PaymentMethodsScreen.jsx';
@@ -63,6 +64,7 @@ const NAV_GROUPS = [
     label: 'Laporan',
     items: [
       { key: 'reports', label: 'Laporan Penjualan', icon: TrendingUp },
+      { key: 'transactionsReport', label: 'Laporan Transaksi', icon: FileText },
       { key: 'priceChangeNotifications', label: 'Notifikasi Harga', icon: Bell },
     ],
   },
@@ -225,6 +227,7 @@ export default function App() {
         {view === 'fixedAssets' && <FixedAssetsScreen />}
         {view === 'accountingReports' && <AccountingReportsScreen />}
         {view === 'reports' && <ReportsScreen />}
+        {view === 'transactionsReport' && <TransactionsReportScreen />}
         {view === 'priceChangeNotifications' && <PriceChangeNotificationsScreen />}
       </div>
     </div>
