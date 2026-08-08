@@ -7,6 +7,7 @@ const TABS = [
   { key: 'balanceSheet', label: 'Neraca' },
   { key: 'cashFlow', label: 'Arus Kas' },
   { key: 'generalLedger', label: 'Buku Besar' },
+  { key: 'ppnSetoran', label: 'PPN Setoran' },
 ];
 
 function todayStr() {
@@ -53,10 +54,12 @@ function AbnormalTag() {
 export default function AccountingReportsScreen() {
   const [tab, setTab] = useState('trialBalance');
   const [accounts, setAccounts] = useState([]);
+  const [taxMode, setTaxMode] = useState('pkp');
   const [error, setError] = useState(null);
 
   useEffect(() => {
     api.listAccountingAccounts().then((d) => setAccounts(d.accounts)).catch((err) => setError(err.message));
+    api.getStoreSettings().then((d) => setTaxMode(d.settings.tax_mode)).catch((err) => setError(err.message));
   }, []);
 
   return (
@@ -81,6 +84,7 @@ export default function AccountingReportsScreen() {
       {tab === 'balanceSheet' && <BalanceSheetTab onError={setError} />}
       {tab === 'cashFlow' && <CashFlowTab onError={setError} />}
       {tab === 'generalLedger' && <GeneralLedgerTab accounts={accounts} onError={setError} />}
+      {tab === 'ppnSetoran' && <PpnSetoranTab taxMode={taxMode} onError={setError} />}
     </div>
   );
 }
@@ -408,6 +412,62 @@ function GeneralLedgerTab({ accounts, onError }) {
             </tbody>
           </table>
           <div style={{ marginTop: 12, fontWeight: 700 }}>Saldo Akhir: {rp(data.closingBalance)}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// PPN Setoran — bandingkan PPN Keluaran (akun 2-104) vs PPN Masukan (1-502)
+// dalam satu periode. Cuma relevan mode PKP (di non-PKP tidak ada PPN
+// Masukan sama sekali, dan penjualan tidak kena PPN Keluaran — laporan ini
+// jadi tidak bermakna, bukan cuma "kosong").
+function PpnSetoranTab({ taxMode, onError }) {
+  const [startDate, setStartDate] = useState(firstOfMonthStr());
+  const [endDate, setEndDate] = useState(todayStr());
+  const [data, setData] = useState(null);
+
+  function load() {
+    onError(null);
+    api.getPpnSetoranReport(startDate, endDate).then(setData).catch((err) => onError(err.message));
+  }
+  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (taxMode !== 'pkp') {
+    return (
+      <div className="card" style={{ marginTop: 12, color: '#666' }}>
+        Toko sedang mode <strong>Non-PKP</strong> — tidak ada PPN Keluaran di penjualan maupun PPN Masukan
+        terpisah di pembelian (PPN melebur ke HPP), jadi laporan setoran PPN tidak relevan. Ganti mode pajak
+        di halaman Pengaturan Toko kalau toko sudah/kembali jadi PKP.
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="inline-form">
+        <label style={{ fontSize: 13 }}>Dari</label>
+        <input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+        <label style={{ fontSize: 13 }}>Sampai</label>
+        <input className="input" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        <button className="btn-primary" onClick={load}>Tampilkan</button>
+      </div>
+      {data && (
+        <div className="card" style={{ marginTop: 12, maxWidth: 480 }}>
+          <table>
+            <tbody>
+              <tr><td>PPN Keluaran (2-104)</td><td style={{ textAlign: 'right' }}>{rp(data.ppnKeluaran)}</td></tr>
+              <tr><td>PPN Masukan (1-502)</td><td style={{ textAlign: 'right' }}>-{rp(data.ppnMasukan)}</td></tr>
+              <tr style={{ fontWeight: 700, borderTop: '1px solid #ccc' }}>
+                <td>Selisih</td><td style={{ textAlign: 'right' }}>{rp(data.selisih)}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style={{ marginTop: 16, padding: 12, borderRadius: 8, fontWeight: 700, textAlign: 'center', fontSize: 15, ...(data.status === 'kurang_bayar' ? { background: '#fee2e2', color: '#991b1b' } : data.status === 'lebih_bayar' ? { background: '#dbeafe', color: '#1e40af' } : { background: '#f3f4f6', color: '#374151' }) }}>
+            {data.status === 'kurang_bayar' && <>KURANG BAYAR — setor {rp(data.setorAmount)} ke negara</>}
+            {data.status === 'lebih_bayar' && <>LEBIH BAYAR — bisa dikompensasi {rp(data.kompensasiAmount)} ke periode berikutnya</>}
+            {data.status === 'nihil' && <>NIHIL — PPN Keluaran = PPN Masukan</>}
+          </div>
         </div>
       )}
     </div>

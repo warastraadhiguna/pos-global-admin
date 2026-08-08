@@ -6,6 +6,7 @@ export default function StoreSettingsScreen() {
   const [nameDraft, setNameDraft] = useState('');
   const [addressDraft, setAddressDraft] = useState('');
   const [phoneDraft, setPhoneDraft] = useState('');
+  const [taxModeDraft, setTaxModeDraft] = useState('pkp');
   const [error, setError] = useState(null);
   const [info, setInfo] = useState(null);
 
@@ -15,6 +16,7 @@ export default function StoreSettingsScreen() {
       setNameDraft(d.settings.store_name || '');
       setAddressDraft(d.settings.store_address || '');
       setPhoneDraft(d.settings.store_phone || '');
+      setTaxModeDraft(d.settings.tax_mode || 'pkp');
     }).catch((err) => setError(err.message));
   }
 
@@ -41,6 +43,19 @@ export default function StoreSettingsScreen() {
       setError(null);
       flash('Identitas toko disimpan — struk kasir akan pakai data ini mulai transaksi berikutnya');
     } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function saveTaxMode(e) {
+    e.preventDefault();
+    try {
+      const d = await api.updateStoreSettings({ taxMode: taxModeDraft });
+      setSettings(d.settings);
+      setError(null);
+      flash(`Mode pajak disimpan: ${d.settings.tax_mode === 'pkp' ? 'PKP' : 'Non-PKP'}`);
+    } catch (err) {
+      setTaxModeDraft(settings.tax_mode); // gagal (mis. terkunci) -> balikin draft ke nilai tersimpan
       setError(err.message);
     }
   }
@@ -91,6 +106,35 @@ export default function StoreSettingsScreen() {
           />
           <button className="btn-primary" type="submit">Simpan Identitas Toko</button>
         </form>
+      </div>
+
+      <div className="card" style={{ marginBottom: 16, maxWidth: 480 }}>
+        <h3 style={{ marginTop: 0 }}>Mode Pajak</h3>
+        <p style={{ color: '#666', fontSize: 13 }}>
+          <strong>PKP</strong>: PPN Keluaran dikenakan di penjualan (ikut pengaturan tarif/mode di halaman
+          Level Harga), PPN Masukan di pembelian dicatat terpisah dari HPP. <strong>Non-PKP</strong>: tidak
+          ada PPN di struk penjualan sama sekali, sedangkan PPN yang dibayar ke supplier saat pembelian
+          masuk jadi bagian HPP/nilai persediaan. Tidak bisa diubah kalau periode berjalan (bulan ini)
+          sudah ada transaksi penjualan/pembelian.
+        </p>
+        {settings && (
+          <form onSubmit={saveTaxMode}>
+            <div style={{ display: 'flex', gap: 20, marginBottom: 14 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 600 }}>
+                <input type="radio" name="taxMode" value="pkp" checked={taxModeDraft === 'pkp'} onChange={(e) => setTaxModeDraft(e.target.value)} />
+                PKP
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 600 }}>
+                <input type="radio" name="taxMode" value="non_pkp" checked={taxModeDraft === 'non_pkp'} onChange={(e) => setTaxModeDraft(e.target.value)} />
+                Non-PKP
+              </label>
+            </div>
+            <button className="btn-primary" type="submit" disabled={taxModeDraft === settings.tax_mode}>Simpan Mode Pajak</button>
+            <p style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+              Status saat ini: <strong>{settings.tax_mode === 'pkp' ? 'PKP' : 'Non-PKP'}</strong>
+            </p>
+          </form>
+        )}
       </div>
 
       <div className="card" style={{ maxWidth: 480 }}>

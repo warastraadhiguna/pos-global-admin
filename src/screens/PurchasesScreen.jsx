@@ -36,6 +36,10 @@ export default function PurchasesScreen() {
   const [purchaseDate, setPurchaseDate] = useState(todayStr());
   const [paymentType, setPaymentType] = useState('cash');
   const [cart, setCart] = useState([]);
+  const [taxMode, setTaxMode] = useState('pkp');
+  const [ppnChecked, setPpnChecked] = useState(false);
+  const [ppnMode, setPpnMode] = useState('exclude');
+  const [ppnRate, setPpnRate] = useState('11');
 
   const [pickProductId, setPickProductId] = useState('');
   const [pickUnits, setPickUnits] = useState([]);
@@ -69,6 +73,7 @@ export default function PurchasesScreen() {
     api.listAccountingAccounts().then((d) => setAccounts(d.accounts)).catch((err) => setError(err.message));
     api.listPurchases().then((d) => setPurchases(d.purchases)).catch((err) => setError(err.message));
     api.listPurchaseReturns().then((d) => setPurchaseReturns(d.purchaseReturns)).catch((err) => setError(err.message));
+    api.getStoreSettings().then((d) => setTaxMode(d.settings.tax_mode)).catch((err) => setError(err.message));
   }
   useEffect(reload, []);
 
@@ -140,10 +145,13 @@ export default function PurchasesScreen() {
           quantity: Number(r.quantity),
           costPerUnit: Number(r.costPerUnit),
         })),
+        ppnMode: ppnChecked ? ppnMode : undefined,
+        ppnRate: ppnChecked ? Number(ppnRate) : undefined,
       });
       setResult(purchase);
       setCart([]);
       setSupplierId('');
+      setPpnChecked(false);
       reload();
     } catch (err) {
       setError(err.message);
@@ -262,6 +270,32 @@ export default function PurchasesScreen() {
           </select>
         </div>
 
+        <div className="inline-form" style={{ marginTop: 8 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 600 }}>
+            <input type="checkbox" checked={ppnChecked} onChange={(e) => setPpnChecked(e.target.checked)} />
+            Ada PPN dari supplier
+          </label>
+          {ppnChecked && (
+            <>
+              <select className="input" value={ppnMode} onChange={(e) => setPpnMode(e.target.value)}>
+                <option value="exclude">Exclude (belum termasuk PPN)</option>
+                <option value="included">Included (harga sudah termasuk PPN)</option>
+              </select>
+              <input
+                className="input" type="number" min="0" step="0.01" style={{ width: 100 }}
+                placeholder="Tarif %" value={ppnRate} onChange={(e) => setPpnRate(e.target.value)}
+              />
+            </>
+          )}
+        </div>
+        {ppnChecked && (
+          <p style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+            {taxMode === 'pkp'
+              ? 'Mode PKP: PPN dipisah jadi akun PPN Masukan tersendiri (bisa dikreditkan), tidak masuk nilai persediaan/HPP.'
+              : 'Mode Non-PKP: PPN tidak bisa dikreditkan — melebur jadi bagian nilai persediaan & avg cost (HPP lebih tinggi).'}
+          </p>
+        )}
+
         <div className="inline-form" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed #ddd' }}>
           <select className="input" value={pickProductId} onChange={(e) => onPickProduct(e.target.value)}>
             <option value="">-- Pilih Produk --</option>
@@ -300,7 +334,10 @@ export default function PurchasesScreen() {
           )}
         </table>
 
-        <button className="btn-primary" style={{ marginTop: 12 }} onClick={submitPurchase} disabled={submitting || !supplierId || cart.length === 0}>
+        <button
+          className="btn-primary" style={{ marginTop: 12 }} onClick={submitPurchase}
+          disabled={submitting || !supplierId || cart.length === 0 || (ppnChecked && (ppnRate === '' || Number(ppnRate) < 0))}
+        >
           {submitting ? 'Menyimpan...' : 'Simpan Pembelian'}
         </button>
 
@@ -308,6 +345,12 @@ export default function PurchasesScreen() {
           <div style={{ marginTop: 16 }}>
             <div className="success-banner">
               Pembelian {result.purchaseNumber} tersimpan — Total {rp(result.grandTotal)} ({result.paymentType === 'cash' ? 'Tunai' : 'Kredit'})
+              {result.ppnMode && Number(result.ppnAmount) > 0 && (
+                <> — DPP {rp(result.dpp)} + PPN Masukan {rp(result.ppnAmount)} ({Number(result.ppnRate)}%, {result.ppnMode === 'exclude' ? 'exclude' : 'included'})</>
+              )}
+              {result.ppnMode && Number(result.ppnAmount) === 0 && (
+                <> — PPN {Number(result.ppnRate)}% ({result.ppnMode === 'exclude' ? 'exclude' : 'included'}) melebur ke nilai persediaan (non-PKP), tidak dipisah</>
+              )}
             </div>
             <JournalPreview entry={result.journalEntry} accountLabel={accountLabel} />
             <div className="card" style={{ marginTop: 12 }}>
@@ -362,7 +405,7 @@ export default function PurchasesScreen() {
       <div className="card" style={{ marginBottom: 20 }}>
         <h3 style={{ marginTop: 0 }}>Riwayat Pembelian</h3>
         <table>
-          <thead><tr><th>No. Pembelian</th><th>Tanggal</th><th>Supplier</th><th>Total</th><th>Bayar</th><th>Status</th><th></th></tr></thead>
+          <thead><tr><th>No. Pembelian</th><th>Tanggal</th><th>Supplier</th><th>DPP</th><th>PPN Masukan</th><th>Total</th><th>Bayar</th><th>Status</th><th></th></tr></thead>
           <tbody>
             {purchases.map((p) => (
               <Fragment key={p.id}>
@@ -370,6 +413,12 @@ export default function PurchasesScreen() {
                   <td>{p.purchase_number}</td>
                   <td>{new Date(p.purchase_date).toLocaleDateString('id-ID')}</td>
                   <td>{p.supplier_name}</td>
+                  <td>{rp(p.dpp)}</td>
+                  <td>
+                    {!p.ppn_mode && '-'}
+                    {p.ppn_mode && Number(p.ppn_amount) > 0 && `${rp(p.ppn_amount)} (${p.ppn_mode === 'exclude' ? 'exclude' : 'included'})`}
+                    {p.ppn_mode && Number(p.ppn_amount) === 0 && 'melebur ke HPP (non-PKP)'}
+                  </td>
                   <td>{rp(p.grand_total)}</td>
                   <td>{p.payment_type === 'cash' ? 'Tunai' : 'Kredit'}</td>
                   <td><span className={`badge ${p.status === 'completed' ? 'active' : 'inactive'}`}>{p.status === 'completed' ? 'Selesai' : 'Void'}</span></td>
@@ -381,7 +430,7 @@ export default function PurchasesScreen() {
                 </tr>
                 {voidingId === p.id && (
                   <tr>
-                    <td colSpan={7}>
+                    <td colSpan={9}>
                       <div className="inline-form" style={{ margin: 0 }}>
                         <input
                           className="input" placeholder="Alasan void (wajib)" style={{ flex: 1, minWidth: 240 }}
@@ -395,7 +444,7 @@ export default function PurchasesScreen() {
                 )}
               </Fragment>
             ))}
-            {purchases.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', color: '#999', padding: 20 }}>Belum ada pembelian</td></tr>}
+            {purchases.length === 0 && <tr><td colSpan={9} style={{ textAlign: 'center', color: '#999', padding: 20 }}>Belum ada pembelian</td></tr>}
           </tbody>
         </table>
       </div>
