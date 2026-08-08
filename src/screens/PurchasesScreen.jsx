@@ -270,25 +270,30 @@ export default function PurchasesScreen() {
           </select>
         </div>
 
-        {taxMode === 'pkp' && (
-          <div className="inline-form" style={{ marginTop: 8 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 600 }}>
-              <input type="checkbox" checked={ppnChecked} onChange={(e) => setPpnChecked(e.target.checked)} />
-              PPN Masukan (dari supplier)
-            </label>
-            {ppnChecked && (
-              <>
-                <select className="input" value={ppnMode} onChange={(e) => setPpnMode(e.target.value)}>
-                  <option value="exclude">Exclude (belum termasuk PPN)</option>
-                  <option value="included">Included (harga sudah termasuk PPN)</option>
-                </select>
-                <input
-                  className="input" type="number" min="0" step="0.01" style={{ width: 100 }}
-                  placeholder="Tarif %" value={ppnRate} onChange={(e) => setPpnRate(e.target.value)}
-                />
-              </>
-            )}
-          </div>
+        <div className="inline-form" style={{ marginTop: 8 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, fontWeight: 600 }}>
+            <input type="checkbox" checked={ppnChecked} onChange={(e) => setPpnChecked(e.target.checked)} />
+            Ada PPN dari supplier
+          </label>
+          {ppnChecked && (
+            <>
+              <select className="input" value={ppnMode} onChange={(e) => setPpnMode(e.target.value)}>
+                <option value="exclude">Exclude (belum termasuk PPN)</option>
+                <option value="included">Included (harga sudah termasuk PPN)</option>
+              </select>
+              <input
+                className="input" type="number" min="0" step="0.01" style={{ width: 100 }}
+                placeholder="Tarif %" value={ppnRate} onChange={(e) => setPpnRate(e.target.value)}
+              />
+            </>
+          )}
+        </div>
+        {ppnChecked && (
+          <p style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+            {taxMode === 'pkp'
+              ? 'Mode PKP: PPN dipisah jadi akun PPN Masukan tersendiri (bisa dikreditkan), tidak masuk nilai persediaan/HPP.'
+              : 'Mode Non-PKP: PPN tidak bisa dikreditkan — melebur jadi bagian nilai persediaan & avg cost (HPP lebih tinggi).'}
+          </p>
         )}
 
         <div className="inline-form" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed #ddd' }}>
@@ -340,8 +345,11 @@ export default function PurchasesScreen() {
           <div style={{ marginTop: 16 }}>
             <div className="success-banner">
               Pembelian {result.purchaseNumber} tersimpan — Total {rp(result.grandTotal)} ({result.paymentType === 'cash' ? 'Tunai' : 'Kredit'})
-              {result.ppnMode && (
+              {result.ppnMode && Number(result.ppnAmount) > 0 && (
                 <> — DPP {rp(result.dpp)} + PPN Masukan {rp(result.ppnAmount)} ({Number(result.ppnRate)}%, {result.ppnMode === 'exclude' ? 'exclude' : 'included'})</>
+              )}
+              {result.ppnMode && Number(result.ppnAmount) === 0 && (
+                <> — PPN {Number(result.ppnRate)}% ({result.ppnMode === 'exclude' ? 'exclude' : 'included'}) melebur ke nilai persediaan (non-PKP), tidak dipisah</>
               )}
             </div>
             <JournalPreview entry={result.journalEntry} accountLabel={accountLabel} />
@@ -406,7 +414,11 @@ export default function PurchasesScreen() {
                   <td>{new Date(p.purchase_date).toLocaleDateString('id-ID')}</td>
                   <td>{p.supplier_name}</td>
                   <td>{rp(p.dpp)}</td>
-                  <td>{p.ppn_mode ? `${rp(p.ppn_amount)} (${p.ppn_mode === 'exclude' ? 'exclude' : 'included'})` : '-'}</td>
+                  <td>
+                    {!p.ppn_mode && '-'}
+                    {p.ppn_mode && Number(p.ppn_amount) > 0 && `${rp(p.ppn_amount)} (${p.ppn_mode === 'exclude' ? 'exclude' : 'included'})`}
+                    {p.ppn_mode && Number(p.ppn_amount) === 0 && 'melebur ke HPP (non-PKP)'}
+                  </td>
                   <td>{rp(p.grand_total)}</td>
                   <td>{p.payment_type === 'cash' ? 'Tunai' : 'Kredit'}</td>
                   <td><span className={`badge ${p.status === 'completed' ? 'active' : 'inactive'}`}>{p.status === 'completed' ? 'Selesai' : 'Void'}</span></td>

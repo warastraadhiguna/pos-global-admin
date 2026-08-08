@@ -103,6 +103,7 @@ export const api = {
   getBalanceSheet: (asOfDate) => request(`/admin/accounting/reports/balance-sheet?asOfDate=${encodeURIComponent(asOfDate)}`),
   getCashFlow: (startDate, endDate) => request(`/admin/accounting/reports/cash-flow?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
   getGeneralLedger: (accountId, startDate, endDate) => request(`/admin/accounting/reports/general-ledger?accountId=${encodeURIComponent(accountId)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
+  getPpnSetoranReport: (startDate, endDate) => request(`/admin/accounting/reports/ppn-setoran?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
 
   listAllSuppliers: () => request('/admin/suppliers/all'),
   createSupplier: (payload) => request('/admin/suppliers', { method: 'POST', body: payload }),
