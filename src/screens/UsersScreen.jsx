@@ -5,6 +5,7 @@ const emptyForm = { role: 'kasir', fullName: '', username: '', password: '', pin
 
 export default function UsersScreen() {
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState(null);
   const [info, setInfo] = useState(null);
@@ -12,9 +13,11 @@ export default function UsersScreen() {
   const [editFullName, setEditFullName] = useState('');
   const [resettingId, setResettingId] = useState(null);
   const [resetValue, setResetValue] = useState('');
+  const [changingRoleFor, setChangingRoleFor] = useState(null);
 
   function reload() {
     api.listUsers().then((d) => setUsers(d.users)).catch((err) => setError(err.message));
+    api.listRoles().then((d) => setRoles(d.roles)).catch(() => {}); // gagal senyap — role dropdown cuma tidak muncul kalau bukan superadmin
   }
 
   useEffect(reload, []);
@@ -64,6 +67,20 @@ export default function UsersScreen() {
     }
   }
 
+  async function changeRole(u, roleId) {
+    if (roleId === u.role_id) { setChangingRoleFor(null); return; }
+    try {
+      await api.updateUserRole(u.id, roleId);
+      setChangingRoleFor(null);
+      flash(`Role ${u.full_name} berhasil diubah`);
+      reload();
+    } catch (err) {
+      // Server yang benar-benar menegakkan (mis. tolak pindah superadmin
+      // terakhir) — UI cuma menampilkan pesannya, bukan mencegah sendiri.
+      setError(err.message);
+    }
+  }
+
   function startReset(u) {
     setResettingId(u.id);
     setResetValue('');
@@ -73,14 +90,17 @@ export default function UsersScreen() {
   async function saveReset(u) {
     if (!resetValue) return;
     try {
-      if (u.role === 'admin') {
+      // has_password (bukan bandingkan nama role) — supaya benar utk role
+      // APAPUN yang login pakai password (admin, superadmin, atau role
+      // custom lain nanti), bukan cuma role bernama literal 'admin'.
+      if (u.has_password) {
         await api.updateUser(u.id, { password: resetValue });
       } else {
         await api.updateUser(u.id, { pin: resetValue });
       }
       setResettingId(null);
       setResetValue('');
-      flash(u.role === 'admin' ? 'Password berhasil direset' : 'PIN berhasil direset');
+      flash(u.has_password ? 'Password berhasil direset' : 'PIN berhasil direset');
       reload();
     } catch (err) {
       setError(err.message);
@@ -131,7 +151,29 @@ export default function UsersScreen() {
                     u.full_name
                   )}
                 </td>
-                <td>{u.role}</td>
+                <td>
+                  {changingRoleFor === u.id ? (
+                    <select
+                      className="input"
+                      autoFocus
+                      defaultValue={u.role_id}
+                      onChange={(e) => changeRole(u, e.target.value)}
+                      onBlur={() => setChangingRoleFor(null)}
+                    >
+                      {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+                    </select>
+                  ) : (
+                    <span
+                      onClick={() => roles.length > 0 && setChangingRoleFor(u.id)}
+                      style={{ cursor: roles.length > 0 ? 'pointer' : 'default', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                      title={roles.length > 0 ? 'Klik utk ubah role' : ''}
+                    >
+                      {u.role}
+                      {!!u.is_superadmin && <span className="badge active" style={{ fontSize: 10 }}>SUPERADMIN</span>}
+                      {roles.length > 0 && <span style={{ fontSize: 11, color: '#999' }}>✎</span>}
+                    </span>
+                  )}
+                </td>
                 <td>{u.username || '-'}</td>
                 <td><span className={`badge ${u.is_active ? 'active' : 'inactive'}`}>{u.is_active ? 'Aktif' : 'Nonaktif'}</span></td>
                 <td>
@@ -145,11 +187,11 @@ export default function UsersScreen() {
                       <input
                         className="input"
                         style={{ width: 140 }}
-                        placeholder={u.role === 'admin' ? 'Password baru' : 'PIN baru (4-6 digit)'}
-                        type={u.role === 'admin' ? 'password' : 'text'}
+                        placeholder={u.has_password ? 'Password baru' : 'PIN baru (4-6 digit)'}
+                        type={u.has_password ? 'password' : 'text'}
                         value={resetValue}
-                        onChange={(e) => setResetValue(u.role === 'admin' ? e.target.value : e.target.value.replace(/\D/g, ''))}
-                        maxLength={u.role === 'admin' ? undefined : 6}
+                        onChange={(e) => setResetValue(u.has_password ? e.target.value : e.target.value.replace(/\D/g, ''))}
+                        maxLength={u.has_password ? undefined : 6}
                         autoFocus
                       />
                       <button className="btn-primary" onClick={() => saveReset(u)}>Simpan</button>
@@ -159,7 +201,7 @@ export default function UsersScreen() {
                     <>
                       <button className="btn-secondary" onClick={() => startEditName(u)} style={{ marginRight: 8 }}>Ubah Nama</button>
                       <button className="btn-secondary" onClick={() => startReset(u)} style={{ marginRight: 8 }}>
-                        {u.role === 'admin' ? 'Reset Password' : 'Reset PIN'}
+                        {u.has_password ? 'Reset Password' : 'Reset PIN'}
                       </button>
                       <button className="btn-secondary" onClick={() => toggleActive(u)}>{u.is_active ? 'Nonaktifkan' : 'Aktifkan'}</button>
                     </>
