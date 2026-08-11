@@ -84,6 +84,14 @@ export const api = {
   createUser: (payload) => request('/admin/users', { method: 'POST', body: payload }),
   updateUser: (id, payload) => request(`/admin/users/${id}`, { method: 'PUT', body: payload }),
 
+  listRoles: () => request('/admin/roles'),
+  getPermissionsCatalog: () => request('/admin/roles/permissions-catalog'),
+  getRolePermissionIds: (roleId) => request(`/admin/roles/${roleId}/permissions`),
+  createRole: (payload) => request('/admin/roles', { method: 'POST', body: payload }),
+  updateRoleName: (roleId, payload) => request(`/admin/roles/${roleId}`, { method: 'PUT', body: payload }),
+  updateRolePermissions: (roleId, permissionIds) => request(`/admin/roles/${roleId}/permissions`, { method: 'PUT', body: { permissionIds } }),
+  deleteRole: (roleId) => request(`/admin/roles/${roleId}`, { method: 'DELETE' }),
+
   listAllPaymentMethods: () => request('/payment-methods/all'),
   createPaymentMethod: (payload) => request('/payment-methods', { method: 'POST', body: payload }),
   updatePaymentMethod: (id, payload) => request(`/payment-methods/${id}`, { method: 'PUT', body: payload }),
