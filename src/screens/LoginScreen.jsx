@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { api } from '../api.js';
 
 export default function LoginScreen({ onLoggedIn }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -35,13 +37,27 @@ export default function LoginScreen({ onLoggedIn }) {
           autoFocus
         />
         <label style={{ fontSize: 13, fontWeight: 600 }}>Password</label>
-        <input
-          className="input"
-          type="password"
-          style={{ width: '100%', margin: '6px 0 18px' }}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        <div style={{ position: 'relative', margin: '6px 0 18px' }}>
+          <input
+            className="input"
+            type={showPassword ? 'text' : 'password'}
+            style={{ width: '100%', paddingRight: 36 }}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            title={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+            style={{
+              position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+              background: 'none', border: 'none', padding: 4, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', color: '#666',
+            }}
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        </div>
         <button className="btn-primary" style={{ width: '100%' }} disabled={loading} type="submit">
           {loading ? 'Memproses...' : 'Masuk'}
         </button>
