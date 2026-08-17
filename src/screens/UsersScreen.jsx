@@ -67,6 +67,20 @@ export default function UsersScreen() {
     }
   }
 
+  async function deleteUser(u) {
+    try {
+      await api.deleteUser(u.id);
+      setError(null);
+      flash(`User "${u.full_name}" dihapus permanen`);
+      reload();
+    } catch (err) {
+      // Server yang benar-benar menegakkan (mis. tolak kalau user masih
+      // punya riwayat transaksi/login — pesan errornya sudah menyarankan
+      // Nonaktifkan sebagai gantinya) — UI cuma menampilkan pesannya.
+      setError(err.message);
+    }
+  }
+
   async function changeRole(u, roleId) {
     if (roleId === u.role_id) { setChangingRoleFor(null); return; }
     try {
@@ -203,7 +217,8 @@ export default function UsersScreen() {
                       <button className="btn-secondary" onClick={() => startReset(u)} style={{ marginRight: 8 }}>
                         {u.has_password ? 'Reset Password' : 'Reset PIN'}
                       </button>
-                      <button className="btn-secondary" onClick={() => toggleActive(u)}>{u.is_active ? 'Nonaktifkan' : 'Aktifkan'}</button>
+                      <button className="btn-secondary" onClick={() => toggleActive(u)} style={{ marginRight: 8 }}>{u.is_active ? 'Nonaktifkan' : 'Aktifkan'}</button>
+                      <button className="btn-danger" onClick={() => deleteUser(u)}>Hapus</button>
                     </>
                   )}
                 </td>

@@ -84,6 +84,7 @@ export const api = {
   createUser: (payload) => request('/admin/users', { method: 'POST', body: payload }),
   updateUser: (id, payload) => request(`/admin/users/${id}`, { method: 'PUT', body: payload }),
   updateUserRole: (id, roleId) => request(`/admin/users/${id}/role`, { method: 'PUT', body: { roleId } }),
+  deleteUser: (id) => request(`/admin/users/${id}`, { method: 'DELETE' }),
 
   listRoles: () => request('/admin/roles'),
   getPermissionsCatalog: () => request('/admin/roles/permissions-catalog'),
