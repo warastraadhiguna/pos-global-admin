@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api.js';
 import { exportToExcel, exportToPdf } from '../utils/export.js';
+import Banner from '../components/Banner.jsx';
 
 const TX_COLUMNS = [
   { header: 'No. Nota', key: 'saleNumber', width: 24 },
@@ -151,7 +152,7 @@ export default function TransactionsReportScreen() {
     <div>
       <h2>Laporan Transaksi</h2>
       <p style={{ color: '#666', marginTop: -8 }}>Read-only. Daftar semua nota (termasuk yang di-void) pada rentang tanggal.</p>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
 
       <form className="inline-form" onSubmit={loadReport}>
         <input className="input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
@@ -234,7 +235,7 @@ export default function TransactionsReportScreen() {
             <button type="button" className="modal-close-btn" onClick={closeDetail} title="Tutup">✕</button>
             <h3 style={{ marginTop: 0 }}>Detail Nota</h3>
             {detailLoading && <p style={{ color: '#999' }}>Memuat detail...</p>}
-            {detailError && <div className="error-banner">{detailError}</div>}
+            <Banner type="error" message={detailError} onClose={() => setDetailError(null)} />
             {!detailLoading && detail && (
               <>
                 <div style={{ overflowY: 'auto', flex: 1 }}>

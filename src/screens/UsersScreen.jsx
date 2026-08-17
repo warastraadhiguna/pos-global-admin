@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 const emptyForm = { role: 'kasir', fullName: '', username: '', password: '', pin: '' };
 
@@ -24,7 +25,6 @@ export default function UsersScreen() {
 
   function flash(msg) {
     setInfo(msg);
-    setTimeout(() => setInfo(null), 2500);
   }
 
   async function submitCreate(e) {
@@ -127,8 +127,8 @@ export default function UsersScreen() {
       <p style={{ color: '#666', marginTop: -8 }}>
         Kasir login pakai PIN (4-6 digit), admin login pakai username + password.
       </p>
-      {error && <div className="error-banner">{error}</div>}
-      {info && <div className="success-banner">{info}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
+      <Banner type="success" message={info} onClose={() => setInfo(null)} />
 
       <div className="card" style={{ marginBottom: 16 }}>
         <h3 style={{ marginTop: 0 }}>Tambah Pengguna</h3>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 const TABS = [
   { key: 'trialBalance', label: 'Neraca Saldo' },
@@ -65,7 +66,7 @@ export default function AccountingReportsScreen() {
   return (
     <div>
       <h2>Laporan Keuangan</h2>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
       <OpeningInventoryBalancePanel onError={setError} />
       <div className="inline-form" style={{ marginBottom: 16 }}>
         {TABS.map((t) => (

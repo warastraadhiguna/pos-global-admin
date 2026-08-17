@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 export default function PriceLevelsScreen() {
   const [priceLevels, setPriceLevels] = useState([]);
@@ -37,7 +38,6 @@ export default function PriceLevelsScreen() {
 
   function flash(msg) {
     setInfo(msg);
-    setTimeout(() => setInfo(null), 2500);
   }
 
   async function submitCreate(e) {
@@ -111,8 +111,8 @@ export default function PriceLevelsScreen() {
     <div>
       <h2>Level Harga</h2>
       <p style={{ color: '#666', marginTop: -8 }}>Mis. ecer, grosir. Tier harga per produk diatur di halaman Produk.</p>
-      {error && <div className="error-banner">{error}</div>}
-      {info && <div className="success-banner">{info}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
+      <Banner type="success" message={info} onClose={() => setInfo(null)} />
 
       <div className="card" style={{ marginBottom: 16 }}>
         <h3 style={{ marginTop: 0 }}>Markup Harga Otomatis</h3>

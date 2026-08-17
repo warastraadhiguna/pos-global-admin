@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 export default function ProductDetailScreen({ productId, onBack }) {
   const [detail, setDetail] = useState(null);
@@ -33,7 +34,6 @@ export default function ProductDetailScreen({ productId, onBack }) {
 
   function flash(msg) {
     setInfo(msg);
-    setTimeout(() => setInfo(null), 2000);
   }
 
   async function saveInfo(e) {
@@ -147,8 +147,8 @@ export default function ProductDetailScreen({ productId, onBack }) {
   return (
     <div>
       <button className="btn-secondary" onClick={onBack} style={{ marginBottom: 16 }}>&larr; Kembali ke daftar produk</button>
-      {error && <div className="error-banner">{error}</div>}
-      {info && <div className="success-banner">{info}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
+      <Banner type="success" message={info} onClose={() => setInfo(null)} />
 
       <div className="card" style={{ marginBottom: 16 }}>
         <h3 style={{ marginTop: 0 }}>Info Produk</h3>

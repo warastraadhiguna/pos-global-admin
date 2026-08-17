@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { api } from '../api.js';
 import JournalPreview from '../components/JournalPreview.jsx';
+import Banner from '../components/Banner.jsx';
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -253,7 +254,7 @@ export default function PurchasesScreen() {
   return (
     <div>
       <h2>Pembelian</h2>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
 
       <div className="card" style={{ marginBottom: 20 }}>
         <h3 style={{ marginTop: 0 }}>Pembelian Baru</h3>

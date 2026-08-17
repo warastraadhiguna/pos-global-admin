@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 const TRIGGER_LABELS = {
   purchase: 'Pembelian',
@@ -48,7 +49,7 @@ export default function PriceChangeNotificationsScreen() {
       <p style={{ color: '#666', marginTop: -8 }}>
         Riwayat setiap kali markup otomatis menghitung ulang harga jual karena HPP rata-rata berubah.
       </p>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
 
       {unreadCount > 0 && (
         <button className="btn-secondary" onClick={markAllRead} style={{ marginBottom: 12 }}>

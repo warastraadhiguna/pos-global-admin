@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api.js';
 import { exportToExcel, exportToPdf } from '../utils/export.js';
+import Banner from '../components/Banner.jsx';
 
 const PRODUCT_COLUMNS = [
   { header: 'Produk', key: 'productName', width: 30 },
@@ -85,7 +86,7 @@ export default function ReportsScreen() {
     <div>
       <h2>Laporan Penjualan</h2>
       <p style={{ color: '#666', marginTop: -8 }}>Read-only. Transaksi yang sudah di-void tidak dihitung.</p>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
 
       <form className="inline-form" onSubmit={loadReport}>
         <input

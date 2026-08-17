@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 export default function PaymentMethodsScreen() {
   const [methods, setMethods] = useState([]);
@@ -73,7 +74,7 @@ export default function PaymentMethodsScreen() {
         Pilihan metode bayar di layar checkout kasir (Tunai, QRIS, Kartu, dst). Tandai "Tunai/kas fisik" hanya untuk
         metode yang uangnya benar-benar masuk laci — dipakai untuk hitung kas seharusnya saat tutup shift.
       </p>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
       <form className="inline-form" onSubmit={submitCreate}>
         <input className="input" placeholder="Nama metode baru (mis. QRIS)" value={newName} onChange={(e) => setNewName(e.target.value)} />
         <label style={{ fontSize: 14, display: 'flex', alignItems: 'center', gap: 6 }}>

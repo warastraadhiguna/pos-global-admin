@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 export default function StoreSettingsScreen() {
   const [settings, setSettings] = useState(null);
@@ -24,7 +25,6 @@ export default function StoreSettingsScreen() {
 
   function flash(msg) {
     setInfo(msg);
-    setTimeout(() => setInfo(null), 2500);
   }
 
   async function saveIdentity(e) {
@@ -75,8 +75,8 @@ export default function StoreSettingsScreen() {
     <div>
       <h2>Pengaturan Toko</h2>
       <p style={{ color: '#666', marginTop: -8 }}>Identitas toko yang tampil di struk, dan pengaturan tampilan layar kasir.</p>
-      {error && <div className="error-banner">{error}</div>}
-      {info && <div className="success-banner">{info}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
+      <Banner type="success" message={info} onClose={() => setInfo(null)} />
 
       <div className="card" style={{ marginBottom: 16, maxWidth: 480 }}>
         <h3 style={{ marginTop: 0 }}>Identitas Toko</h3>

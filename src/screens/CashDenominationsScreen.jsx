@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 export default function CashDenominationsScreen() {
   const [denominations, setDenominations] = useState([]);
@@ -69,7 +70,7 @@ export default function CashDenominationsScreen() {
       <p style={{ color: '#666', marginTop: -8 }}>
         Tombol shortcut nominal tunai di layar checkout kasir (mis. 10.000, 20.000, 50.000). Kasir menekan tombol ini untuk menambah nominal uang yang diterima.
       </p>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
       <form className="inline-form" onSubmit={submitCreate}>
         <input className="input" type="number" min="1" placeholder="Nominal baru (Rp)" value={newAmount} onChange={(e) => setNewAmount(e.target.value)} />
         <button className="btn-primary" type="submit">Tambah</button>

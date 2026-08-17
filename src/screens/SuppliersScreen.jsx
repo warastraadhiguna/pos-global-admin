@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 const emptyForm = { name: '', contactPerson: '', phone: '', address: '' };
 
@@ -63,7 +64,7 @@ export default function SuppliersScreen() {
   return (
     <div>
       <h2>Supplier</h2>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
       <form className="inline-form" onSubmit={submitCreate}>
         <input className="input" placeholder="Nama supplier" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         <input className="input" placeholder="Kontak person" value={form.contactPerson} onChange={(e) => setForm({ ...form, contactPerson: e.target.value })} />

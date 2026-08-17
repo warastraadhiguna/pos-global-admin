@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 export default function UnitsScreen() {
   const [units, setUnits] = useState([]);
@@ -29,7 +30,7 @@ export default function UnitsScreen() {
     <div>
       <h2>Satuan</h2>
       <p style={{ color: '#666', marginTop: -8 }}>Satuan dasar global (pcs, dus, lusin, dst). Konversi per produk diatur di halaman Produk.</p>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
       <form className="inline-form" onSubmit={submitCreate}>
         <input className="input" placeholder="Nama satuan baru (mis. lusin)" value={newName} onChange={(e) => setNewName(e.target.value)} />
         <button className="btn-primary" type="submit">Tambah</button>

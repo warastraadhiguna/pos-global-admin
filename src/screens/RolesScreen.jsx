@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 // Urutan kolom aksi di matriks — aksi standar dulu (lihat/tambah/edit/hapus/
 // void), baru aksi sensitif/bespoke lain. Kolom yang tidak dipakai modul
@@ -42,7 +43,6 @@ export default function RolesScreen() {
 
   function flash(msg) {
     setInfo(msg);
-    setTimeout(() => setInfo(null), 2500);
   }
 
   const selectedRole = roles.find((r) => r.id === selectedRoleId) || null;
@@ -174,8 +174,8 @@ export default function RolesScreen() {
         Buat role baru & atur wewenangnya per modul. Halaman ini cuma lapisan kenyamanan — penegakan izin yang
         sesungguhnya selalu di server, tiap endpoint memeriksa sendiri.
       </p>
-      {error && <div className="error-banner">{error}</div>}
-      {info && <div className="success-banner">{info}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
+      <Banner type="success" message={info} onClose={() => setInfo(null)} />
 
       <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16, alignItems: 'start' }}>
         <div className="card">

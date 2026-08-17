@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 export default function ProductsScreen({ onSelectProduct }) {
   const [products, setProducts] = useState([]);
@@ -43,7 +44,7 @@ export default function ProductsScreen({ onSelectProduct }) {
         <h2>Produk</h2>
         <button className="btn-primary" onClick={() => setShowCreate(true)}>+ Tambah Produk</button>
       </div>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
 
       {showCreate && (
         <div className="card" style={{ marginBottom: 16 }}>

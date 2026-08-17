@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import JournalPreview from '../components/JournalPreview.jsx';
+import Banner from '../components/Banner.jsx';
 
 function rp(decimalString) {
   const n = Math.round(Number(decimalString));
@@ -126,7 +127,7 @@ export default function StockOpnameScreen() {
   return (
     <div>
       <h2>Stock Opname</h2>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
 
       {!selectedId && (
         <>

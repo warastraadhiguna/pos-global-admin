@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 export default function LoginScreen({ onLoggedIn }) {
   const [username, setUsername] = useState('');
@@ -27,7 +28,7 @@ export default function LoginScreen({ onLoggedIn }) {
     <div className="screen-center">
       <form className="card" style={{ width: 340 }} onSubmit={submit}>
         <h2 style={{ marginTop: 0 }}>POS Admin</h2>
-        {error && <div className="error-banner">{error}</div>}
+        <Banner type="error" message={error} onClose={() => setError(null)} />
         <label style={{ fontSize: 13, fontWeight: 600 }}>Username</label>
         <input
           className="input"

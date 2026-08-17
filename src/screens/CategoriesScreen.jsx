@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
+import Banner from '../components/Banner.jsx';
 
 export default function CategoriesScreen() {
   const [categories, setCategories] = useState([]);
@@ -37,7 +38,7 @@ export default function CategoriesScreen() {
   return (
     <div>
       <h2>Kategori Produk</h2>
-      {error && <div className="error-banner">{error}</div>}
+      <Banner type="error" message={error} onClose={() => setError(null)} />
       <form className="inline-form" onSubmit={submitCreate}>
         <input className="input" placeholder="Nama kategori baru" value={newName} onChange={(e) => setNewName(e.target.value)} />
         <button className="btn-primary" type="submit">Tambah</button>
