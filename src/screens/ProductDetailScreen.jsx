@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import Banner from '../components/Banner.jsx';
+import MoneyInput from '../components/MoneyInput.jsx';
 
 export default function ProductDetailScreen({ productId, onBack }) {
   const [detail, setDetail] = useState(null);
@@ -280,7 +281,7 @@ export default function ProductDetailScreen({ productId, onBack }) {
               {priceLevels.map((pl) => <option key={pl.id} value={pl.id}>{pl.name}</option>)}
             </select>
             <input className="input" type="number" min="0" placeholder="Min qty (base unit)" value={newPrice.minQtyBase} onChange={(e) => setNewPrice({ ...newPrice, minQtyBase: e.target.value })} style={{ width: 160 }} />
-            <input className="input" type="number" min="0" placeholder="Harga (Rp)" value={newPrice.price} onChange={(e) => setNewPrice({ ...newPrice, price: e.target.value })} style={{ width: 140 }} />
+            <MoneyInput placeholder="Harga (Rp)" value={newPrice.price} onChange={(price) => setNewPrice({ ...newPrice, price })} style={{ width: 140 }} />
             <button className="btn-primary" type="submit">Tambah Harga</button>
           </div>
         </form>
