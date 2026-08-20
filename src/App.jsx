@@ -3,7 +3,7 @@ import {
   Package, Folder, Ruler, Tag, Banknote, CreditCard, Users, Truck,
   ShoppingCart, ClipboardCheck, Receipt, Building, BarChart, TrendingUp,
   ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut, FileText, Store, ShieldCheck,
-  History, RotateCcw,
+  History, RotateCcw, Warehouse,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
 import LoginScreen from './screens/LoginScreen.jsx';
@@ -28,6 +28,7 @@ import StockOpnameScreen from './screens/StockOpnameScreen.jsx';
 import PriceChangeNotificationsScreen from './screens/PriceChangeNotificationsScreen.jsx';
 import StoreSettingsScreen from './screens/StoreSettingsScreen.jsx';
 import RolesScreen from './screens/RolesScreen.jsx';
+import StockScreen from './screens/StockScreen.jsx';
 
 const DEFAULT_VIEW = 'products';
 
@@ -36,6 +37,7 @@ const NAV_GROUPS = [
     label: 'Master Data',
     items: [
       { key: 'products', label: 'Produk', icon: Package },
+      { key: 'stock', label: 'Stok', icon: Warehouse },
       { key: 'categories', label: 'Kategori', icon: Folder },
       { key: 'units', label: 'Satuan', icon: Ruler },
       { key: 'priceLevels', label: 'Level Harga', icon: Tag },
@@ -223,6 +225,7 @@ export default function App() {
         {view === 'products' && selectedProductId && (
           <ProductDetailScreen productId={selectedProductId} onBack={() => setSelectedProductId(null)} />
         )}
+        {view === 'stock' && <StockScreen />}
         {view === 'categories' && <CategoriesScreen />}
         {view === 'units' && <UnitsScreen />}
         {view === 'priceLevels' && <PriceLevelsScreen />}

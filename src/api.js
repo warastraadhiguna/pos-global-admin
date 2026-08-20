@@ -57,6 +57,7 @@ export const api = {
   listProducts: () => request('/admin/products'),
   searchProducts: (q) => request(`/products/search?q=${encodeURIComponent(q)}`),
   getProduct: (id) => request(`/admin/products/${id}`),
+  listProductStock: () => request('/products/stock'),
   createProduct: (payload) => request('/admin/products', { method: 'POST', body: payload }),
   updateProduct: (id, payload) => request(`/admin/products/${id}`, { method: 'PUT', body: payload }),
 
