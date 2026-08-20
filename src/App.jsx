@@ -29,6 +29,7 @@ import PriceChangeNotificationsScreen from './screens/PriceChangeNotificationsSc
 import StoreSettingsScreen from './screens/StoreSettingsScreen.jsx';
 import RolesScreen from './screens/RolesScreen.jsx';
 import StockScreen from './screens/StockScreen.jsx';
+import StockHistoryScreen from './screens/StockHistoryScreen.jsx';
 
 const DEFAULT_VIEW = 'products';
 
@@ -37,12 +38,18 @@ const NAV_GROUPS = [
     label: 'Master Data',
     items: [
       { key: 'products', label: 'Produk', icon: Package },
-      { key: 'stock', label: 'Stok', icon: Warehouse },
       { key: 'categories', label: 'Kategori', icon: Folder },
       { key: 'units', label: 'Satuan', icon: Ruler },
       { key: 'priceLevels', label: 'Level Harga', icon: Tag },
       { key: 'cashDenominations', label: 'Pecahan Uang', icon: Banknote },
       { key: 'paymentMethods', label: 'Metode Pembayaran', icon: CreditCard },
+    ],
+  },
+  {
+    label: 'Stok',
+    items: [
+      { key: 'stock', label: 'Stok', icon: Warehouse },
+      { key: 'stockHistory', label: 'Riwayat Stok', icon: History },
     ],
   },
   {
@@ -226,6 +233,7 @@ export default function App() {
           <ProductDetailScreen productId={selectedProductId} onBack={() => setSelectedProductId(null)} />
         )}
         {view === 'stock' && <StockScreen />}
+        {view === 'stockHistory' && <StockHistoryScreen />}
         {view === 'categories' && <CategoriesScreen />}
         {view === 'units' && <UnitsScreen />}
         {view === 'priceLevels' && <PriceLevelsScreen />}

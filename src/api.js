@@ -58,6 +58,15 @@ export const api = {
   searchProducts: (q) => request(`/products/search?q=${encodeURIComponent(q)}`),
   getProduct: (id) => request(`/admin/products/${id}`),
   listProductStock: () => request('/products/stock'),
+  listStockMovements: ({ productId, dateFrom, dateTo, movementType } = {}) => {
+    const params = new URLSearchParams();
+    if (productId) params.set('productId', productId);
+    if (dateFrom) params.set('dateFrom', dateFrom);
+    if (dateTo) params.set('dateTo', dateTo);
+    if (movementType) params.set('movementType', movementType);
+    const qs = params.toString();
+    return request(`/admin/stock/movements${qs ? `?${qs}` : ''}`);
+  },
   createProduct: (payload) => request('/admin/products', { method: 'POST', body: payload }),
   updateProduct: (id, payload) => request(`/admin/products/${id}`, { method: 'PUT', body: payload }),
 
