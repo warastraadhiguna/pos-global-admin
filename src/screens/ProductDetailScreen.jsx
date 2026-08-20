@@ -151,7 +151,8 @@ export default function ProductDetailScreen({ productId, onBack }) {
       <Banner type="error" message={error} onClose={() => setError(null)} />
       <Banner type="success" message={info} onClose={() => setInfo(null)} />
 
-      <div className="card" style={{ marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="card">
         <h3 style={{ marginTop: 0 }}>Info Produk</h3>
         <form onSubmit={saveInfo}>
           <div className="inline-form">
@@ -170,7 +171,7 @@ export default function ProductDetailScreen({ productId, onBack }) {
         <p style={{ color: '#999', fontSize: 13 }}>Satuan dasar: <strong>{detail.product.base_unit_name}</strong> (tidak bisa diubah setelah produk dibuat)</p>
       </div>
 
-      <div className="card" style={{ marginBottom: 16 }}>
+      <div className="card">
         <h3 style={{ marginTop: 0 }}>Satuan & Konversi</h3>
         <table>
           <thead><tr><th>Satuan</th><th>Konversi ke base unit</th><th></th></tr></thead>
@@ -196,7 +197,7 @@ export default function ProductDetailScreen({ productId, onBack }) {
         </form>
       </div>
 
-      <div className="card" style={{ marginBottom: 16 }}>
+      <div className="card">
         <h3 style={{ marginTop: 0 }}>Barcode</h3>
         <table>
           <thead><tr><th>Barcode</th><th>Satuan</th><th></th></tr></thead>
@@ -285,6 +286,7 @@ export default function ProductDetailScreen({ productId, onBack }) {
             <button className="btn-primary" type="submit">Tambah Harga</button>
           </div>
         </form>
+      </div>
       </div>
     </div>
   );
