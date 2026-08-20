@@ -55,6 +55,7 @@ export const api = {
   updatePriceLevel: (id, payload) => request(`/price-levels/${id}`, { method: 'PUT', body: payload }),
 
   listProducts: () => request('/admin/products'),
+  searchProducts: (q) => request(`/products/search?q=${encodeURIComponent(q)}`),
   getProduct: (id) => request(`/admin/products/${id}`),
   createProduct: (payload) => request('/admin/products', { method: 'POST', body: payload }),
   updateProduct: (id, payload) => request(`/admin/products/${id}`, { method: 'PUT', body: payload }),
@@ -126,6 +127,10 @@ export const api = {
 
   listPurchaseReturns: () => request('/admin/purchase-returns'),
   createPurchaseReturn: (payload) => request('/admin/purchase-returns', { method: 'POST', body: payload }),
+
+  listPurchaseDrafts: () => request('/admin/purchase-drafts'),
+  createPurchaseDraft: (payload) => request('/admin/purchase-drafts', { method: 'POST', body: payload }),
+  deletePurchaseDraft: (id) => request(`/admin/purchase-drafts/${id}`, { method: 'DELETE' }),
 
   listStockOpnames: () => request('/admin/stock-opnames'),
   getStockOpname: (id) => request(`/admin/stock-opnames/${id}`),

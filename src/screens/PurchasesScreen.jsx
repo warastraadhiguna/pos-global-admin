@@ -1,7 +1,22 @@
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api.js';
 import JournalPreview from '../components/JournalPreview.jsx';
 import Banner from '../components/Banner.jsx';
+import ProductSearchSelect from '../components/ProductSearchSelect.jsx';
+import SupplierSearchSelect from '../components/SupplierSearchSelect.jsx';
+import DiscountInput from '../components/DiscountInput.jsx';
+import MoneyInput from '../components/MoneyInput.jsx';
+
+// Hitung nominal diskon dari type+value, sama formula dgn server
+// (computeDiscount di PurchaseService.js) — dipakai cuma utk PREVIEW di UI,
+// perhitungan final & journal tetap dilakukan server-side.
+function discountAmount(type, value, base) {
+  if (!type || !value) return 0;
+  const v = Number(value);
+  if (!v || v <= 0) return 0;
+  if (type === 'percent') return (base * Math.min(v, 100)) / 100;
+  return Math.min(v, base);
+}
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -9,71 +24,60 @@ function todayStr() {
 function rp(n) {
   return `Rp${Number(n).toLocaleString('id-ID', { maximumFractionDigits: 2 })}`;
 }
+function toDateInputValue(d) {
+  if (!d) return todayStr();
+  return new Date(d).toISOString().slice(0, 10);
+}
 
 let cartKeyCounter = 0;
 
-function InterveningNote({ movements }) {
-  if (!movements || movements.length === 0) return null;
-  const productNames = [...new Set(movements.map((m) => m.product_name))];
-  return (
-    <div className="error-banner" style={{ border: '2px solid #d97706', background: '#fffbeb', color: '#92400e', fontSize: 13 }}>
-      ⚠️ Ada {movements.length} transaksi lain terjadi SEJAK pembelian ini dibuat, melibatkan: {productNames.join(', ')}.
-      Selisih tetap dihitung dgn benar (nilai pembelian ini dikeluarkan persis dari pool saat ini), tapi avg cost hasilnya
-      bisa terlihat tidak seperti harga wajar manapun — itu konsekuensi matematis yang tak terhindarkan, bukan kesalahan
-      hitung, begitu ada transaksi lain memakai stok yang sama sebelum pembelian ini di-void.
-    </div>
-  );
-}
-
 export default function PurchasesScreen() {
   const [suppliers, setSuppliers] = useState([]);
-  const [products, setProducts] = useState([]);
   const [accounts, setAccounts] = useState([]);
-  const [purchases, setPurchases] = useState([]);
-  const [purchaseReturns, setPurchaseReturns] = useState([]);
   const [error, setError] = useState(null);
 
   const [supplierId, setSupplierId] = useState('');
   const [purchaseDate, setPurchaseDate] = useState(todayStr());
   const [paymentType, setPaymentType] = useState('cash');
+  const [notes, setNotes] = useState('');
   const [cart, setCart] = useState([]);
   const [taxMode, setTaxMode] = useState('pkp');
   const [ppnChecked, setPpnChecked] = useState(false);
   const [ppnMode, setPpnMode] = useState('exclude');
   const [ppnRate, setPpnRate] = useState('11');
+  const [totalDiscountType, setTotalDiscountType] = useState(null);
+  const [totalDiscountValue, setTotalDiscountValue] = useState('');
 
   const [pickProductId, setPickProductId] = useState('');
+  const [pickProductName, setPickProductName] = useState('');
+  // Berubah tiap kali item ditambah ke keranjang -> dipakai sbg `key` di
+  // <ProductSearchSelect> supaya komponennya di-remount (reset state
+  // internalnya balik ke search box kosong & langsung fokus lagi, bukan
+  // nyangkut nampilin produk yg baru saja ditambah).
+  const [pickResetKey, setPickResetKey] = useState(0);
   const [pickUnits, setPickUnits] = useState([]);
   const [pickUnitId, setPickUnitId] = useState('');
   const [pickQuantity, setPickQuantity] = useState('');
   const [pickCostPerUnit, setPickCostPerUnit] = useState('');
+  const [pickDiscountType, setPickDiscountType] = useState(null);
+  const [pickDiscountValue, setPickDiscountValue] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
 
-  const [voidingId, setVoidingId] = useState(null);
-  const [voidReason, setVoidReason] = useState('');
-  const [voidResult, setVoidResult] = useState(null);
+  // Konfirmasi sebelum benar-benar simpan — 3 pilihan: simpan pembelian
+  // (masuk stok+akuntansi), simpan sebagai draft (belum), batal.
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
 
-  // --- Retur Pembelian ---
-  const [returnSupplierId, setReturnSupplierId] = useState('');
-  const [returnDate, setReturnDate] = useState(todayStr());
-  const [returnPaymentType, setReturnPaymentType] = useState('cash');
-  const [returnReason, setReturnReason] = useState('');
-  const [returnCart, setReturnCart] = useState([]);
-  const [rPickProductId, setRPickProductId] = useState('');
-  const [rPickUnits, setRPickUnits] = useState([]);
-  const [rPickUnitId, setRPickUnitId] = useState('');
-  const [rPickQuantity, setRPickQuantity] = useState('');
-  const [returnSubmitting, setReturnSubmitting] = useState(false);
-  const [returnResult, setReturnResult] = useState(null);
+  // Daftar draft pembelian — sama pola dgn "Daftar Draft" nota di kasir.
+  const [draftListOpen, setDraftListOpen] = useState(false);
+  const [drafts, setDrafts] = useState([]);
+  const [draftsLoading, setDraftsLoading] = useState(false);
 
   function reload() {
     api.listAllSuppliers().then((d) => setSuppliers(d.suppliers.filter((s) => s.is_active))).catch((err) => setError(err.message));
-    api.listProducts().then((d) => setProducts(d.products)).catch((err) => setError(err.message));
     api.listAccountingAccounts().then((d) => setAccounts(d.accounts)).catch((err) => setError(err.message));
-    api.listPurchases().then((d) => setPurchases(d.purchases)).catch((err) => setError(err.message));
-    api.listPurchaseReturns().then((d) => setPurchaseReturns(d.purchaseReturns)).catch((err) => setError(err.message));
     api.getStoreSettings().then((d) => setTaxMode(d.settings.tax_mode)).catch((err) => setError(err.message));
   }
   useEffect(reload, []);
@@ -82,17 +86,15 @@ export default function PurchasesScreen() {
     const a = accounts.find((x) => x.id === id);
     return a ? `${a.code} ${a.name}` : id;
   }
-  function productName(id) {
-    return products.find((p) => p.id === id)?.name || id;
-  }
 
-  async function onPickProduct(productId) {
-    setPickProductId(productId);
+  async function onPickProduct(product) {
+    setPickProductId(product?.id || '');
+    setPickProductName(product?.name || '');
     setPickUnitId('');
     setPickUnits([]);
-    if (!productId) return;
+    if (!product) return;
     try {
-      const detail = await api.getProduct(productId);
+      const detail = await api.getProduct(product.id);
       setPickUnits(detail.units);
       const baseUnit = detail.units.find((u) => u.is_base_unit) || detail.units[0];
       if (baseUnit) setPickUnitId(baseUnit.unit_id);
@@ -103,35 +105,69 @@ export default function PurchasesScreen() {
 
   function addItemToCart() {
     if (!pickProductId || !pickUnitId || !pickQuantity || !pickCostPerUnit) return;
-    const product = products.find((p) => p.id === pickProductId);
     const unit = pickUnits.find((u) => u.unit_id === pickUnitId);
     setCart((prev) => [
       ...prev,
       {
         key: ++cartKeyCounter,
         productId: pickProductId,
-        productName: product?.name || pickProductId,
+        productName: pickProductName || pickProductId,
         unitId: pickUnitId,
         unitName: unit?.unit_name || '',
         quantity: pickQuantity,
         costPerUnit: pickCostPerUnit,
+        discountType: pickDiscountType,
+        discountValue: pickDiscountValue,
       },
     ]);
     setPickProductId('');
+    setPickProductName('');
+    setPickResetKey((k) => k + 1);
     setPickUnits([]);
     setPickUnitId('');
     setPickQuantity('');
     setPickCostPerUnit('');
+    setPickDiscountType(null);
+    setPickDiscountValue('');
   }
 
   function removeCartItem(key) {
     setCart((prev) => prev.filter((r) => r.key !== key));
   }
 
-  const cartTotal = cart.reduce((sum, r) => sum + Number(r.quantity || 0) * Number(r.costPerUnit || 0), 0);
+  function resetForm() {
+    setSupplierId('');
+    setPurchaseDate(todayStr());
+    setPaymentType('cash');
+    setNotes('');
+    setCart([]);
+    setPpnChecked(false);
+    setPpnMode('exclude');
+    setPpnRate('11');
+    setTotalDiscountType(null);
+    setTotalDiscountValue('');
+  }
+
+  const cartSubtotal = cart.reduce((sum, r) => sum + Number(r.quantity || 0) * Number(r.costPerUnit || 0), 0);
+  const cartItemDiscountTotal = cart.reduce((sum, r) => {
+    const gross = Number(r.quantity || 0) * Number(r.costPerUnit || 0);
+    return sum + discountAmount(r.discountType, r.discountValue, gross);
+  }, 0);
+  const subtotalAfterItemDiscount = cartSubtotal - cartItemDiscountTotal;
+  const totalDiscountAmount = discountAmount(totalDiscountType, totalDiscountValue, subtotalAfterItemDiscount);
+  const cartTotal = subtotalAfterItemDiscount - totalDiscountAmount;
+  const canSave = !submitting && !savingDraft && !!supplierId && cart.length > 0 && !(ppnChecked && (ppnRate === '' || Number(ppnRate) < 0));
+
+  function openConfirm() {
+    if (!canSave) return;
+    setConfirmOpen(true);
+  }
+  function closeConfirm() {
+    setConfirmOpen(false);
+  }
 
   async function submitPurchase() {
-    if (!supplierId || cart.length === 0) return;
+    setConfirmOpen(false);
     setSubmitting(true);
     setError(null);
     setResult(null);
@@ -140,20 +176,22 @@ export default function PurchasesScreen() {
         supplierId,
         purchaseDate,
         paymentType,
+        notes: notes.trim() || undefined,
         items: cart.map((r) => ({
           productId: r.productId,
           unitId: r.unitId,
           quantity: Number(r.quantity),
           costPerUnit: Number(r.costPerUnit),
+          discountType: r.discountType || undefined,
+          discountValue: r.discountValue ? Number(r.discountValue) : undefined,
         })),
         ppnMode: ppnChecked ? ppnMode : undefined,
         ppnRate: ppnChecked ? Number(ppnRate) : undefined,
+        totalDiscountType: totalDiscountType || undefined,
+        totalDiscountValue: totalDiscountValue ? Number(totalDiscountValue) : undefined,
       });
       setResult(purchase);
-      setCart([]);
-      setSupplierId('');
-      setPpnChecked(false);
-      reload();
+      resetForm();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -161,93 +199,99 @@ export default function PurchasesScreen() {
     }
   }
 
-  function startVoid(purchaseId) {
-    setVoidingId(purchaseId);
-    setVoidReason('');
-    setVoidResult(null);
-  }
-  function cancelVoid() {
-    setVoidingId(null);
-    setVoidReason('');
-  }
-  async function confirmVoid(purchaseId) {
-    if (!voidReason.trim()) {
-      setError('Alasan void wajib diisi');
-      return;
-    }
+  async function saveDraftInstead() {
+    setConfirmOpen(false);
+    setSavingDraft(true);
     setError(null);
     try {
-      const result = await api.voidPurchase(purchaseId, { reason: voidReason.trim() });
-      setVoidResult(result);
-      setVoidingId(null);
-      setVoidReason('');
-      reload();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  // --- Retur Pembelian handlers ---
-  async function onRPickProduct(productId) {
-    setRPickProductId(productId);
-    setRPickUnitId('');
-    setRPickUnits([]);
-    if (!productId) return;
-    try {
-      const detail = await api.getProduct(productId);
-      setRPickUnits(detail.units);
-      const baseUnit = detail.units.find((u) => u.is_base_unit) || detail.units[0];
-      if (baseUnit) setRPickUnitId(baseUnit.unit_id);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-  function addReturnItem() {
-    if (!rPickProductId || !rPickUnitId || !rPickQuantity) return;
-    const product = products.find((p) => p.id === rPickProductId);
-    const unit = rPickUnits.find((u) => u.unit_id === rPickUnitId);
-    setReturnCart((prev) => [
-      ...prev,
-      {
-        key: ++cartKeyCounter,
-        productId: rPickProductId,
-        productName: product?.name || rPickProductId,
-        unitId: rPickUnitId,
-        unitName: unit?.unit_name || '',
-        quantity: rPickQuantity,
-      },
-    ]);
-    setRPickProductId('');
-    setRPickUnits([]);
-    setRPickUnitId('');
-    setRPickQuantity('');
-  }
-  function removeReturnItem(key) {
-    setReturnCart((prev) => prev.filter((r) => r.key !== key));
-  }
-
-  async function submitReturn() {
-    if (!returnSupplierId || returnCart.length === 0 || !returnReason.trim()) return;
-    setReturnSubmitting(true);
-    setError(null);
-    setReturnResult(null);
-    try {
-      const { purchaseReturn } = await api.createPurchaseReturn({
-        supplierId: returnSupplierId,
-        returnDate,
-        paymentType: returnPaymentType,
-        reason: returnReason.trim(),
-        items: returnCart.map((r) => ({ productId: r.productId, unitId: r.unitId, quantity: Number(r.quantity) })),
+      await api.createPurchaseDraft({
+        supplierId: supplierId || null,
+        purchaseDate,
+        paymentType,
+        notes: notes.trim() || null,
+        ppn: ppnChecked ? { mode: ppnMode, rate: Number(ppnRate) } : null,
+        totalDiscount: totalDiscountType ? { type: totalDiscountType, value: Number(totalDiscountValue) } : null,
+        items: cart.map((r) => ({
+          productId: r.productId,
+          productName: r.productName,
+          unitId: r.unitId,
+          unitName: r.unitName,
+          quantity: Number(r.quantity),
+          costPerUnit: Number(r.costPerUnit),
+          discountType: r.discountType || null,
+          discountValue: r.discountValue ? Number(r.discountValue) : null,
+        })),
       });
-      setReturnResult(purchaseReturn);
-      setReturnCart([]);
-      setReturnSupplierId('');
-      setReturnReason('');
-      reload();
+      resetForm();
     } catch (err) {
       setError(err.message);
     } finally {
-      setReturnSubmitting(false);
+      setSavingDraft(false);
+    }
+  }
+
+  function openDraftList() {
+    setDraftListOpen(true);
+    setDraftsLoading(true);
+    api.listPurchaseDrafts()
+      .then((d) => setDrafts(d.drafts))
+      .catch((err) => setError(err.message))
+      .finally(() => setDraftsLoading(false));
+  }
+  function closeDraftList() {
+    setDraftListOpen(false);
+  }
+
+  // Panggil draft balik ke form — draft LANGSUNG dihapus dari server begitu
+  // dipanggil (bukan menunggu sampai benar2 disimpan), sama persis pola
+  // "Panggil" draft nota di kasir — konsisten dgn behavior yang sudah ada.
+  async function recallDraft(draft) {
+    setError(null);
+    try {
+      await api.deletePurchaseDraft(draft.id);
+    } catch (err) {
+      setError(err.message);
+      return;
+    }
+    setSupplierId(draft.supplierId || '');
+    setPurchaseDate(toDateInputValue(draft.purchaseDate));
+    setPaymentType(draft.paymentType || 'cash');
+    setNotes(draft.notes || '');
+    if (draft.ppn) {
+      setPpnChecked(true);
+      setPpnMode(draft.ppn.mode || 'exclude');
+      setPpnRate(String(draft.ppn.rate ?? '11'));
+    } else {
+      setPpnChecked(false);
+    }
+    if (draft.totalDiscount) {
+      setTotalDiscountType(draft.totalDiscount.type || null);
+      setTotalDiscountValue(String(draft.totalDiscount.value ?? ''));
+    } else {
+      setTotalDiscountType(null);
+      setTotalDiscountValue('');
+    }
+    setCart(draft.items.map((it) => ({
+      key: ++cartKeyCounter,
+      productId: it.productId,
+      productName: it.productName || it.productId,
+      unitId: it.unitId,
+      unitName: it.unitName || '',
+      quantity: String(it.quantity),
+      costPerUnit: String(it.costPerUnit),
+      discountType: it.discountType || null,
+      discountValue: it.discountValue != null ? String(it.discountValue) : '',
+    })));
+    setDraftListOpen(false);
+  }
+
+  async function deleteDraftRow(id) {
+    setError(null);
+    try {
+      await api.deletePurchaseDraft(id);
+      setDrafts((prev) => prev.filter((d) => d.id !== id));
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -257,18 +301,36 @@ export default function PurchasesScreen() {
       <Banner type="error" message={error} onClose={() => setError(null)} />
 
       <div className="card" style={{ marginBottom: 20 }}>
-        <h3 style={{ marginTop: 0 }}>Pembelian Baru</h3>
+        <div className="inline-form" style={{ justifyContent: 'space-between' }}>
+          <h3 style={{ margin: 0 }}>Pembelian Baru</h3>
+          <button className="btn-secondary" type="button" onClick={openDraftList}>📋 Daftar Draft</button>
+        </div>
 
-        <div className="inline-form">
-          <select className="input" value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
-            <option value="">-- Pilih Supplier --</option>
-            {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <input className="input" type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} />
-          <select className="input" value={paymentType} onChange={(e) => setPaymentType(e.target.value)}>
-            <option value="cash">Tunai (Kas)</option>
-            <option value="credit">Kredit (Utang Usaha)</option>
-          </select>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginTop: 14 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Supplier</label>
+            <SupplierSearchSelect
+              suppliers={suppliers}
+              value={supplierId}
+              onSelect={(s) => setSupplierId(s?.id || '')}
+              style={{ width: '100%' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Tanggal</label>
+            <input className="input" style={{ width: '100%' }} type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Jenis Pembayaran</label>
+            <select className="input" style={{ width: '100%' }} value={paymentType} onChange={(e) => setPaymentType(e.target.value)}>
+              <option value="cash">Tunai (Kas)</option>
+              <option value="credit">Kredit (Utang Usaha)</option>
+            </select>
+          </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Catatan (opsional)</label>
+            <input className="input" style={{ width: '100%' }} placeholder="Catatan pada nota pembelian..." value={notes} onChange={(e) => setNotes(e.target.value)} />
+          </div>
         </div>
 
         <div className="inline-form" style={{ marginTop: 8 }}>
@@ -297,55 +359,70 @@ export default function PurchasesScreen() {
           </p>
         )}
 
-        <div className="inline-form" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed #ddd' }}>
-          <select className="input" value={pickProductId} onChange={(e) => onPickProduct(e.target.value)}>
-            <option value="">-- Pilih Produk --</option>
-            {products.map((p) => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
-          </select>
+        <div className="inline-form" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed #ddd', flexWrap: 'wrap' }}>
+          <ProductSearchSelect key={pickResetKey} onSelect={onPickProduct} style={{ width: 260 }} />
           <select className="input" value={pickUnitId} onChange={(e) => setPickUnitId(e.target.value)} disabled={pickUnits.length === 0}>
             {pickUnits.length === 0 && <option value="">-- Satuan --</option>}
             {pickUnits.map((u) => <option key={u.unit_id} value={u.unit_id}>{u.unit_name}{u.is_base_unit ? ' (dasar)' : ''}</option>)}
           </select>
           <input className="input" type="number" min="0.0001" step="any" placeholder="Qty" style={{ width: 100 }} value={pickQuantity} onChange={(e) => setPickQuantity(e.target.value)} />
-          <input className="input" type="number" min="1" placeholder="Harga beli / satuan (Rp)" value={pickCostPerUnit} onChange={(e) => setPickCostPerUnit(e.target.value)} />
+          <MoneyInput placeholder="Harga beli / satuan (Rp)" value={pickCostPerUnit} onChange={setPickCostPerUnit} style={{ width: 180 }} />
+          <DiscountInput type={pickDiscountType} value={pickDiscountValue} onTypeChange={setPickDiscountType} onValueChange={setPickDiscountValue} />
           <button className="btn-secondary" type="button" onClick={addItemToCart} disabled={!pickProductId || !pickUnitId || !pickQuantity || !pickCostPerUnit}>
             + Tambah Item
           </button>
         </div>
 
         <table style={{ marginTop: 12 }}>
-          <thead><tr><th>Produk</th><th>Satuan</th><th>Qty</th><th>Harga/Satuan</th><th>Subtotal</th><th></th></tr></thead>
+          <thead><tr><th>Produk</th><th>Satuan</th><th>Qty</th><th>Harga/Satuan</th><th>Diskon</th><th>Subtotal</th><th></th></tr></thead>
           <tbody>
-            {cart.map((r) => (
-              <tr key={r.key}>
-                <td>{r.productName}</td>
-                <td>{r.unitName}</td>
-                <td>{r.quantity}</td>
-                <td>{rp(r.costPerUnit)}</td>
-                <td>{rp(Number(r.quantity) * Number(r.costPerUnit))}</td>
-                <td><button className="btn-danger" onClick={() => removeCartItem(r.key)}>Hapus</button></td>
-              </tr>
-            ))}
-            {cart.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', color: '#999', padding: 16 }}>Belum ada item</td></tr>}
+            {cart.map((r) => {
+              const gross = Number(r.quantity) * Number(r.costPerUnit);
+              const disc = discountAmount(r.discountType, r.discountValue, gross);
+              return (
+                <tr key={r.key}>
+                  <td>{r.productName}</td>
+                  <td>{r.unitName}</td>
+                  <td>{r.quantity}</td>
+                  <td>{rp(r.costPerUnit)}</td>
+                  <td>{disc > 0 ? `- ${rp(disc)}` : '-'}</td>
+                  <td>{rp(gross - disc)}</td>
+                  <td><button className="btn-danger" onClick={() => removeCartItem(r.key)}>Hapus</button></td>
+                </tr>
+              );
+            })}
+            {cart.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', color: '#999', padding: 16 }}>Belum ada item</td></tr>}
           </tbody>
-          {cart.length > 0 && (
-            <tfoot>
-              <tr style={{ fontWeight: 700 }}><td colSpan={4}>Total</td><td colSpan={2}>{rp(cartTotal)}</td></tr>
-            </tfoot>
-          )}
         </table>
 
-        <button
-          className="btn-primary" style={{ marginTop: 12 }} onClick={submitPurchase}
-          disabled={submitting || !supplierId || cart.length === 0 || (ppnChecked && (ppnRate === '' || Number(ppnRate) < 0))}
-        >
-          {submitting ? 'Menyimpan...' : 'Simpan Pembelian'}
+        {cart.length > 0 && (
+          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ minWidth: 320 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
+                <span>Subtotal (setelah diskon item)</span><span>{rp(subtotalAfterItemDiscount)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 13, marginBottom: 6, gap: 8 }}>
+                <span>Diskon Total Nota</span>
+                <DiscountInput type={totalDiscountType} value={totalDiscountValue} onTypeChange={setTotalDiscountType} onValueChange={setTotalDiscountValue} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: 18, borderTop: '1px solid #ddd', paddingTop: 8 }}>
+                <span>Total</span><span>{rp(cartTotal)}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <button className="btn-primary" style={{ marginTop: 12 }} onClick={openConfirm} disabled={!canSave}>
+          Simpan Pembelian
         </button>
 
         {result && (
           <div style={{ marginTop: 16 }}>
             <div className="success-banner">
               Pembelian {result.purchaseNumber} tersimpan — Total {rp(result.grandTotal)} ({result.paymentType === 'cash' ? 'Tunai' : 'Kredit'})
+              {Number(result.discountTotal) > 0 && (
+                <> — Subtotal {rp(result.subtotal)}, Diskon {rp(result.discountTotal)}</>
+              )}
               {result.ppnMode && Number(result.ppnAmount) > 0 && (
                 <> — DPP {rp(result.dpp)} + PPN Masukan {rp(result.ppnAmount)} ({Number(result.ppnRate)}%, {result.ppnMode === 'exclude' ? 'exclude' : 'included'})</>
               )}
@@ -361,7 +438,7 @@ export default function PurchasesScreen() {
                 <tbody>
                   {result.items.map((it, i) => (
                     <tr key={i}>
-                      <td>{productName(it.productId)}</td>
+                      <td>{it.productName || it.productId}</td>
                       <td>{Number(it.quantityBase).toLocaleString('id-ID')}</td>
                       <td>{Number(it.qtyBaseBefore).toLocaleString('id-ID')}</td>
                       <td>{rp(it.avgCostBefore)}</td>
@@ -376,178 +453,56 @@ export default function PurchasesScreen() {
         )}
       </div>
 
-      {voidResult && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <strong>Hasil Void Pembelian {voidResult.purchaseNumber}</strong>
-          <InterveningNote movements={voidResult.interveningMovements} />
-          {voidResult.journalEntry ? (
-            <JournalPreview entry={voidResult.journalEntry} accountLabel={accountLabel} />
-          ) : (
-            <div style={{ fontSize: 13, color: '#999', marginTop: 8 }}>Tidak ada jurnal untuk dibalik.</div>
-          )}
-          <table style={{ marginTop: 8 }}>
-            <thead><tr><th>Produk</th><th>Stok Sebelum</th><th>Avg Cost Sebelum</th><th>Stok Sesudah</th><th>Avg Cost Sesudah</th><th></th></tr></thead>
-            <tbody>
-              {voidResult.items.map((it, i) => (
-                <tr key={i}>
-                  <td>{productName(it.productId)}</td>
-                  <td>{Number(it.qtyBaseBefore).toLocaleString('id-ID')}</td>
-                  <td>{rp(it.avgCostBefore)}</td>
-                  <td>{Number(it.qtyBaseAfter).toLocaleString('id-ID')}</td>
-                  <td>{rp(it.avgCostAfter)}</td>
-                  <td>{it.hadInterveningTransaction && <span className="badge inactive">ada transaksi di tengah</span>}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {confirmOpen && (
+        <div className="modal-overlay">
+          <div className="card" style={{ width: 440 }}>
+            <h3 style={{ marginTop: 0 }}>Konfirmasi Pembelian</h3>
+            <div style={{ fontSize: 14, marginBottom: 6 }}>
+              Supplier: <strong>{suppliers.find((s) => s.id === supplierId)?.name || '-'}</strong>
+            </div>
+            <div style={{ fontSize: 14, marginBottom: 6 }}>{cart.length} item</div>
+            {(cartItemDiscountTotal > 0 || totalDiscountAmount > 0) && (
+              <div style={{ fontSize: 13, color: '#666', marginBottom: 6 }}>
+                Subtotal {rp(cartSubtotal)} — Diskon {rp(cartItemDiscountTotal + totalDiscountAmount)}
+              </div>
+            )}
+            <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 20 }}>Total: {rp(cartTotal)}</div>
+            <button className="btn-primary" style={{ width: '100%', marginBottom: 8 }} onClick={submitPurchase} disabled={submitting}>
+              {submitting ? 'Menyimpan...' : '✅ Simpan Pembelian (masuk stok & akuntansi)'}
+            </button>
+            <button className="btn-secondary" style={{ width: '100%', marginBottom: 8 }} onClick={saveDraftInstead} disabled={savingDraft}>
+              {savingDraft ? 'Menyimpan draft...' : '📋 Simpan sebagai Draft (belum masuk stok/akuntansi)'}
+            </button>
+            <button className="btn-secondary" style={{ width: '100%' }} onClick={closeConfirm}>Batal</button>
+          </div>
         </div>
       )}
 
-      <div className="card" style={{ marginBottom: 20 }}>
-        <h3 style={{ marginTop: 0 }}>Riwayat Pembelian</h3>
-        <table>
-          <thead><tr><th>No. Pembelian</th><th>Tanggal</th><th>Supplier</th><th>DPP</th><th>PPN Masukan</th><th>Total</th><th>Bayar</th><th>Status</th><th></th></tr></thead>
-          <tbody>
-            {purchases.map((p) => (
-              <Fragment key={p.id}>
-                <tr>
-                  <td>{p.purchase_number}</td>
-                  <td>{new Date(p.purchase_date).toLocaleDateString('id-ID')}</td>
-                  <td>{p.supplier_name}</td>
-                  <td>{rp(p.dpp)}</td>
-                  <td>
-                    {!p.ppn_mode && '-'}
-                    {p.ppn_mode && Number(p.ppn_amount) > 0 && `${rp(p.ppn_amount)} (${p.ppn_mode === 'exclude' ? 'exclude' : 'included'})`}
-                    {p.ppn_mode && Number(p.ppn_amount) === 0 && 'melebur ke HPP (non-PKP)'}
-                  </td>
-                  <td>{rp(p.grand_total)}</td>
-                  <td>{p.payment_type === 'cash' ? 'Tunai' : 'Kredit'}</td>
-                  <td><span className={`badge ${p.status === 'completed' ? 'active' : 'inactive'}`}>{p.status === 'completed' ? 'Selesai' : 'Void'}</span></td>
-                  <td>
-                    {p.status === 'completed' && voidingId !== p.id && (
-                      <button className="btn-danger" onClick={() => startVoid(p.id)}>Void</button>
-                    )}
-                  </td>
-                </tr>
-                {voidingId === p.id && (
-                  <tr>
-                    <td colSpan={9}>
-                      <div className="inline-form" style={{ margin: 0 }}>
-                        <input
-                          className="input" placeholder="Alasan void (wajib)" style={{ flex: 1, minWidth: 240 }}
-                          value={voidReason} onChange={(e) => setVoidReason(e.target.value)} autoFocus
-                        />
-                        <button className="btn-danger" onClick={() => confirmVoid(p.id)} disabled={!voidReason.trim()}>Konfirmasi Void</button>
-                        <button className="btn-secondary" onClick={cancelVoid}>Batal</button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
+      {draftListOpen && (
+        <div className="modal-overlay">
+          <div className="card" style={{ width: 560 }}>
+            <button type="button" className="modal-close-btn" onClick={closeDraftList} title="Tutup">✕</button>
+            <h3 style={{ marginTop: 0 }}>Daftar Draft Pembelian</h3>
+            <p style={{ fontSize: 13, color: '#666', marginTop: -8 }}>
+              Belum masuk stok/akuntansi. Panggil untuk lanjutkan mengisi form, lalu simpan seperti biasa.
+            </p>
+            {draftsLoading && <p style={{ color: '#999' }}>Memuat...</p>}
+            {!draftsLoading && drafts.length === 0 && <p style={{ color: '#999' }}>Belum ada draft tersimpan.</p>}
+            {!draftsLoading && drafts.map((d) => (
+              <div key={d.id} className="inline-form" style={{ borderBottom: '1px solid #eee', paddingBottom: 10, marginBottom: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>{d.supplierName || '(tanpa supplier)'} — {d.itemCount} item</div>
+                  <div style={{ fontSize: 12, color: '#999' }}>
+                    dibuat {new Date(d.createdAt).toLocaleString('id-ID')} oleh {d.createdByName}
+                  </div>
+                </div>
+                <button className="btn-primary" onClick={() => recallDraft(d)}>Panggil</button>
+                <button className="btn-danger" onClick={() => deleteDraftRow(d.id)}>Hapus</button>
+              </div>
             ))}
-            {purchases.length === 0 && <tr><td colSpan={9} style={{ textAlign: 'center', color: '#999', padding: 20 }}>Belum ada pembelian</td></tr>}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="card" style={{ marginBottom: 20 }}>
-        <h3 style={{ marginTop: 0 }}>Retur Pembelian</h3>
-        <p style={{ color: '#666', fontSize: 13, marginTop: -8 }}>
-          Barang benar-benar dikembalikan ke supplier (transaksi bisnis nyata, bukan koreksi salah input — pakai avg
-          cost berjalan saat retur diproses, sama seperti menjual).
-        </p>
-
-        <div className="inline-form">
-          <select className="input" value={returnSupplierId} onChange={(e) => setReturnSupplierId(e.target.value)}>
-            <option value="">-- Pilih Supplier --</option>
-            {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <input className="input" type="date" value={returnDate} onChange={(e) => setReturnDate(e.target.value)} />
-          <select className="input" value={returnPaymentType} onChange={(e) => setReturnPaymentType(e.target.value)}>
-            <option value="cash">Tunai (dana kembali ke Kas)</option>
-            <option value="credit">Kredit (mengurangi Utang Usaha)</option>
-          </select>
-        </div>
-        <div className="inline-form">
-          <input className="input" placeholder="Alasan retur (wajib)" style={{ flex: 1, minWidth: 260 }} value={returnReason} onChange={(e) => setReturnReason(e.target.value)} />
-        </div>
-
-        <div className="inline-form" style={{ marginTop: 12, paddingTop: 12, borderTop: '1px dashed #ddd' }}>
-          <select className="input" value={rPickProductId} onChange={(e) => onRPickProduct(e.target.value)}>
-            <option value="">-- Pilih Produk --</option>
-            {products.map((p) => <option key={p.id} value={p.id}>{p.sku} — {p.name}</option>)}
-          </select>
-          <select className="input" value={rPickUnitId} onChange={(e) => setRPickUnitId(e.target.value)} disabled={rPickUnits.length === 0}>
-            {rPickUnits.length === 0 && <option value="">-- Satuan --</option>}
-            {rPickUnits.map((u) => <option key={u.unit_id} value={u.unit_id}>{u.unit_name}{u.is_base_unit ? ' (dasar)' : ''}</option>)}
-          </select>
-          <input className="input" type="number" min="0.0001" step="any" placeholder="Qty" style={{ width: 100 }} value={rPickQuantity} onChange={(e) => setRPickQuantity(e.target.value)} />
-          <button className="btn-secondary" type="button" onClick={addReturnItem} disabled={!rPickProductId || !rPickUnitId || !rPickQuantity}>
-            + Tambah Item
-          </button>
-        </div>
-
-        <table style={{ marginTop: 12 }}>
-          <thead><tr><th>Produk</th><th>Satuan</th><th>Qty</th><th></th></tr></thead>
-          <tbody>
-            {returnCart.map((r) => (
-              <tr key={r.key}>
-                <td>{r.productName}</td>
-                <td>{r.unitName}</td>
-                <td>{r.quantity}</td>
-                <td><button className="btn-danger" onClick={() => removeReturnItem(r.key)}>Hapus</button></td>
-              </tr>
-            ))}
-            {returnCart.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', color: '#999', padding: 16 }}>Belum ada item</td></tr>}
-          </tbody>
-        </table>
-
-        <button
-          className="btn-primary" style={{ marginTop: 12 }} onClick={submitReturn}
-          disabled={returnSubmitting || !returnSupplierId || returnCart.length === 0 || !returnReason.trim()}
-        >
-          {returnSubmitting ? 'Menyimpan...' : 'Simpan Retur Pembelian'}
-        </button>
-
-        {returnResult && (
-          <div style={{ marginTop: 16 }}>
-            <div className="success-banner">
-              Retur {returnResult.returnNumber} tersimpan — Total {rp(returnResult.grandTotal)} ({returnResult.paymentType === 'cash' ? 'Tunai' : 'Kredit'})
-            </div>
-            <JournalPreview entry={returnResult.journalEntry} accountLabel={accountLabel} />
-            <table style={{ marginTop: 8 }}>
-              <thead><tr><th>Produk</th><th>Qty (base)</th><th>Avg Cost Berjalan</th><th>Nilai</th></tr></thead>
-              <tbody>
-                {returnResult.items.map((it, i) => (
-                  <tr key={i}>
-                    <td>{productName(it.productId)}</td>
-                    <td>{Number(it.quantityBase).toLocaleString('id-ID')}</td>
-                    <td>{rp(it.costPerBaseUnit)}</td>
-                    <td>{rp(it.amount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
-        )}
-
-        <table style={{ marginTop: 16 }}>
-          <thead><tr><th>No. Retur</th><th>Tanggal</th><th>Supplier</th><th>Total</th><th>Bayar</th><th>Alasan</th></tr></thead>
-          <tbody>
-            {purchaseReturns.map((r) => (
-              <tr key={r.id}>
-                <td>{r.return_number}</td>
-                <td>{new Date(r.return_date).toLocaleDateString('id-ID')}</td>
-                <td>{r.supplier_name}</td>
-                <td>{rp(r.grand_total)}</td>
-                <td>{r.payment_type === 'cash' ? 'Tunai' : 'Kredit'}</td>
-                <td>{r.reason}</td>
-              </tr>
-            ))}
-            {purchaseReturns.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', color: '#999', padding: 20 }}>Belum ada retur pembelian</td></tr>}
-          </tbody>
-        </table>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
