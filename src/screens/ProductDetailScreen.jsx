@@ -155,18 +155,27 @@ export default function ProductDetailScreen({ productId, onBack }) {
       <div className="card">
         <h3 style={{ marginTop: 0 }}>Info Produk</h3>
         <form onSubmit={saveInfo}>
-          <div className="inline-form">
-            <input className="input" placeholder="Nama" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
-            <input className="input" placeholder="SKU" value={editForm.sku} onChange={(e) => setEditForm({ ...editForm, sku: e.target.value })} />
-            <select className="input" value={editForm.categoryId} onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })}>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Nama</label>
+            <input className="input" style={{ width: '100%' }} placeholder="Nama" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>SKU</label>
+            <input className="input" style={{ width: '100%' }} placeholder="SKU" value={editForm.sku} onChange={(e) => setEditForm({ ...editForm, sku: e.target.value })} />
+          </div>
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Kategori</label>
+            <select className="input" style={{ width: '100%' }} value={editForm.categoryId} onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })}>
               <option value="">(tanpa kategori)</option>
               {allCategories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
+          </div>
+          <div style={{ marginBottom: 12 }}>
             <label style={{ fontSize: 14 }}>
               <input type="checkbox" checked={editForm.isActive} onChange={(e) => setEditForm({ ...editForm, isActive: e.target.checked })} /> Aktif
             </label>
-            <button className="btn-primary" type="submit">Simpan</button>
           </div>
+          <button className="btn-primary" type="submit">Simpan</button>
         </form>
         <p style={{ color: '#999', fontSize: 13 }}>Satuan dasar: <strong>{detail.product.base_unit_name}</strong> (tidak bisa diubah setelah produk dibuat)</p>
       </div>
@@ -185,14 +194,21 @@ export default function ProductDetailScreen({ productId, onBack }) {
             ))}
           </tbody>
         </table>
-        <form onSubmit={submitAddUnit} style={{ marginTop: 12 }}>
-          <div className="inline-form">
-            <select className="input" value={newUnit.unitId} onChange={(e) => setNewUnit({ ...newUnit, unitId: e.target.value })}>
-              <option value="">Pilih satuan</option>
-              {allUnits.filter((u) => !detail.units.some((du) => du.unit_id === u.id)).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-            </select>
-            <input className="input" type="number" min="0.0001" step="0.0001" placeholder="Konversi (mis. 12)" value={newUnit.conversionFactor} onChange={(e) => setNewUnit({ ...newUnit, conversionFactor: e.target.value })} style={{ width: 160 }} />
-            <button className="btn-primary" type="submit">Tambah Satuan</button>
+        <form onSubmit={submitAddUnit} style={{ marginTop: 12, padding: 12, background: '#f9fafb', border: '1px solid #eee', borderRadius: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 8 }}>Tambah Satuan Baru</div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 120 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Satuan</label>
+              <select className="input" style={{ width: '100%' }} value={newUnit.unitId} onChange={(e) => setNewUnit({ ...newUnit, unitId: e.target.value })}>
+                <option value="">Pilih satuan</option>
+                {allUnits.filter((u) => !detail.units.some((du) => du.unit_id === u.id)).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1, minWidth: 120 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Konversi ke base unit</label>
+              <input className="input" style={{ width: '100%' }} type="number" min="0.0001" step="0.0001" placeholder="mis. 12" value={newUnit.conversionFactor} onChange={(e) => setNewUnit({ ...newUnit, conversionFactor: e.target.value })} />
+            </div>
+            <button className="btn-primary" type="submit" style={{ flex: '0 0 auto' }}>+ Tambah</button>
           </div>
         </form>
       </div>
@@ -212,14 +228,21 @@ export default function ProductDetailScreen({ productId, onBack }) {
             {detail.barcodes.length === 0 && <tr><td colSpan={3} style={{ textAlign: 'center', color: '#999', padding: 12 }}>Belum ada barcode</td></tr>}
           </tbody>
         </table>
-        <form onSubmit={submitAddBarcode} style={{ marginTop: 12 }}>
-          <div className="inline-form">
-            <select className="input" value={newBarcode.unitId} onChange={(e) => setNewBarcode({ ...newBarcode, unitId: e.target.value })}>
-              <option value="">Pilih satuan</option>
-              {detail.units.map((u) => <option key={u.unit_id} value={u.unit_id}>{u.unit_name}</option>)}
-            </select>
-            <input className="input" placeholder="Kode barcode" value={newBarcode.barcode} onChange={(e) => setNewBarcode({ ...newBarcode, barcode: e.target.value })} />
-            <button className="btn-primary" type="submit">Tambah Barcode</button>
+        <form onSubmit={submitAddBarcode} style={{ marginTop: 12, padding: 12, background: '#f9fafb', border: '1px solid #eee', borderRadius: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 8 }}>Tambah Barcode Baru</div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 120 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Satuan</label>
+              <select className="input" style={{ width: '100%' }} value={newBarcode.unitId} onChange={(e) => setNewBarcode({ ...newBarcode, unitId: e.target.value })}>
+                <option value="">Pilih satuan</option>
+                {detail.units.map((u) => <option key={u.unit_id} value={u.unit_id}>{u.unit_name}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1, minWidth: 120 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Kode Barcode</label>
+              <input className="input" style={{ width: '100%' }} placeholder="Kode barcode" value={newBarcode.barcode} onChange={(e) => setNewBarcode({ ...newBarcode, barcode: e.target.value })} />
+            </div>
+            <button className="btn-primary" type="submit" style={{ flex: '0 0 auto' }}>+ Tambah</button>
           </div>
         </form>
       </div>
@@ -230,6 +253,24 @@ export default function ProductDetailScreen({ productId, onBack }) {
           Angka bisa berpecahan kalau berasal dari markup otomatis (HPP + markup%) — sengaja tidak dibulatkan.
           Kunci baris supaya tidak ikut ditimpa saat markup otomatis menghitung ulang.
         </p>
+
+        {Number(detail.avgCostPerBaseUnit) > 0 && (
+          <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 6, padding: '8px 12px', marginBottom: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#1e3a8a', marginBottom: 4 }}>
+              Acuan Harga Pembelian Rata-rata (HPP) — untuk bantu tetapkan harga jual
+            </div>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              {detail.units.map((u) => (
+                <div key={u.unit_id} style={{ fontSize: 13 }}>
+                  {u.unit_name}: <strong>
+                    Rp{(Number(detail.avgCostPerBaseUnit) * Number(u.conversion_factor)).toLocaleString('id-ID', { maximumFractionDigits: 2 })}
+                  </strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <table>
           <thead><tr><th>Satuan</th><th>Level</th><th>Min Qty (base)</th><th>Harga</th><th>Kunci</th><th></th></tr></thead>
           <tbody>
@@ -271,19 +312,32 @@ export default function ProductDetailScreen({ productId, onBack }) {
             {detail.prices.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', color: '#999', padding: 12 }}>Belum ada harga</td></tr>}
           </tbody>
         </table>
-        <form onSubmit={submitAddPrice} style={{ marginTop: 12 }}>
-          <div className="inline-form">
-            <select className="input" value={newPrice.unitId} onChange={(e) => setNewPrice({ ...newPrice, unitId: e.target.value })}>
-              <option value="">Satuan</option>
-              {detail.units.map((u) => <option key={u.unit_id} value={u.unit_id}>{u.unit_name}</option>)}
-            </select>
-            <select className="input" value={newPrice.priceLevelId} onChange={(e) => setNewPrice({ ...newPrice, priceLevelId: e.target.value })}>
-              <option value="">Level harga</option>
-              {priceLevels.map((pl) => <option key={pl.id} value={pl.id}>{pl.name}</option>)}
-            </select>
-            <input className="input" type="number" min="0" placeholder="Min qty (base unit)" value={newPrice.minQtyBase} onChange={(e) => setNewPrice({ ...newPrice, minQtyBase: e.target.value })} style={{ width: 160 }} />
-            <MoneyInput placeholder="Harga (Rp)" value={newPrice.price} onChange={(price) => setNewPrice({ ...newPrice, price })} style={{ width: 140 }} />
-            <button className="btn-primary" type="submit">Tambah Harga</button>
+        <form onSubmit={submitAddPrice} style={{ marginTop: 12, padding: 12, background: '#f9fafb', border: '1px solid #eee', borderRadius: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 8 }}>Tambah Harga Baru</div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 64 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Satuan</label>
+              <select className="input" style={{ width: '100%' }} value={newPrice.unitId} onChange={(e) => setNewPrice({ ...newPrice, unitId: e.target.value })}>
+                <option value="">Satuan</option>
+                {detail.units.map((u) => <option key={u.unit_id} value={u.unit_id}>{u.unit_name}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1, minWidth: 64 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Level Harga</label>
+              <select className="input" style={{ width: '100%' }} value={newPrice.priceLevelId} onChange={(e) => setNewPrice({ ...newPrice, priceLevelId: e.target.value })}>
+                <option value="">Level</option>
+                {priceLevels.map((pl) => <option key={pl.id} value={pl.id}>{pl.name}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1, minWidth: 56 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Min Qty</label>
+              <input className="input" style={{ width: '100%' }} type="number" min="0" placeholder="0" value={newPrice.minQtyBase} onChange={(e) => setNewPrice({ ...newPrice, minQtyBase: e.target.value })} />
+            </div>
+            <div style={{ flex: 1, minWidth: 80 }}>
+              <label style={{ display: 'block', fontSize: 12, color: '#666', marginBottom: 4 }}>Harga (Rp)</label>
+              <MoneyInput placeholder="Harga (Rp)" value={newPrice.price} onChange={(price) => setNewPrice({ ...newPrice, price })} style={{ width: '100%' }} />
+            </div>
+            <button className="btn-primary" type="submit" style={{ flex: '0 0 auto' }}>+ Tambah</button>
           </div>
         </form>
       </div>
