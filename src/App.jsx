@@ -3,7 +3,7 @@ import {
   Package, Folder, Ruler, Tag, Banknote, CreditCard, Users, Truck,
   ShoppingCart, ClipboardCheck, Receipt, Building, BarChart, TrendingUp,
   ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut, FileText, Store, ShieldCheck,
-  History, RotateCcw, Warehouse, PackageMinus,
+  History, RotateCcw, Warehouse, PackageMinus, DatabaseBackup,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
 import LoginScreen from './screens/LoginScreen.jsx';
@@ -32,6 +32,7 @@ import StockScreen from './screens/StockScreen.jsx';
 import StockHistoryScreen from './screens/StockHistoryScreen.jsx';
 import InternalStockUsageScreen from './screens/InternalStockUsageScreen.jsx';
 import InternalStockUsageHistoryScreen from './screens/InternalStockUsageHistoryScreen.jsx';
+import BackupScreen from './screens/BackupScreen.jsx';
 
 const DEFAULT_VIEW = 'products';
 
@@ -62,6 +63,7 @@ const NAV_GROUPS = [
       { key: 'users', label: 'Kelola Pengguna', icon: Users },
       { key: 'roles', label: 'Kelola Role', icon: ShieldCheck },
       { key: 'storeSettings', label: 'Pengaturan Toko', icon: Store },
+      { key: 'backups', label: 'Backup Database', icon: DatabaseBackup },
     ],
   },
   {
@@ -253,6 +255,7 @@ export default function App() {
         {view === 'users' && <UsersScreen />}
         {view === 'roles' && <RolesScreen />}
         {view === 'storeSettings' && <StoreSettingsScreen />}
+        {view === 'backups' && <BackupScreen />}
         {view === 'expenses' && <ExpensesScreen />}
         {view === 'fixedAssets' && <FixedAssetsScreen />}
         {view === 'accountingReports' && <AccountingReportsScreen />}

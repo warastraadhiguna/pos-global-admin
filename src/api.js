@@ -155,6 +155,33 @@ export const api = {
   getStoreSettings: () => request('/store-settings'),
   updateStoreSettings: (payload) => request('/store-settings', { method: 'PUT', body: payload }),
 
+  getBackups: () => request('/admin/backups'),
+  updateBackupSettings: (payload) => request('/admin/backups/settings', { method: 'PUT', body: payload }),
+  runBackupNow: () => request('/admin/backups/run', { method: 'POST' }),
+  deleteBackup: (id) => request(`/admin/backups/${id}`, { method: 'DELETE' }),
+  // Bukan lewat request() biasa — respons endpoint ini file mentah (bukan
+  // JSON), dan perlu Authorization header (jadi tidak bisa pakai <a href>
+  // polos, browser tidak ikut kirim Bearer token pada navigasi biasa).
+  // Ambil sbg blob lewat fetch manual, lalu trigger save via object URL.
+  downloadBackup: async (id, filename) => {
+    const res = await fetch(`${BASE_URL}/admin/backups/${id}/download`, {
+      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || `Gagal download (${res.status})`);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
+
   getPricingSettings: () => request('/admin/pricing/settings'),
   updatePricingSettings: (payload) => request('/admin/pricing/settings', { method: 'PUT', body: payload }),
   listPriceChangeNotifications: () => request('/admin/pricing/notifications'),
