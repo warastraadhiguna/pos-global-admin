@@ -7,6 +7,7 @@ const MOVEMENT_TYPE_LABELS = {
   purchase: 'Pembelian',
   purchase_void: 'Void Pembelian',
   purchase_return: 'Retur Pembelian',
+  internal_use: 'Pemakaian Internal',
   sale: 'Penjualan',
   void_reversal: 'Void Penjualan',
   opname: 'Stock Opname',

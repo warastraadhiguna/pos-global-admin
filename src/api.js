@@ -138,6 +138,10 @@ export const api = {
   listPurchaseReturns: () => request('/admin/purchase-returns'),
   createPurchaseReturn: (payload) => request('/admin/purchase-returns', { method: 'POST', body: payload }),
 
+  listInternalStockUsages: () => request('/admin/internal-stock-usage'),
+  getInternalStockUsage: (id) => request(`/admin/internal-stock-usage/${id}`),
+  createInternalStockUsage: (payload) => request('/admin/internal-stock-usage', { method: 'POST', body: payload }),
+
   listPurchaseDrafts: () => request('/admin/purchase-drafts'),
   createPurchaseDraft: (payload) => request('/admin/purchase-drafts', { method: 'POST', body: payload }),
   deletePurchaseDraft: (id) => request(`/admin/purchase-drafts/${id}`, { method: 'DELETE' }),

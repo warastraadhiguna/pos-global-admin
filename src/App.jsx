@@ -3,7 +3,7 @@ import {
   Package, Folder, Ruler, Tag, Banknote, CreditCard, Users, Truck,
   ShoppingCart, ClipboardCheck, Receipt, Building, BarChart, TrendingUp,
   ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut, FileText, Store, ShieldCheck,
-  History, RotateCcw, Warehouse,
+  History, RotateCcw, Warehouse, PackageMinus,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
 import LoginScreen from './screens/LoginScreen.jsx';
@@ -30,6 +30,8 @@ import StoreSettingsScreen from './screens/StoreSettingsScreen.jsx';
 import RolesScreen from './screens/RolesScreen.jsx';
 import StockScreen from './screens/StockScreen.jsx';
 import StockHistoryScreen from './screens/StockHistoryScreen.jsx';
+import InternalStockUsageScreen from './screens/InternalStockUsageScreen.jsx';
+import InternalStockUsageHistoryScreen from './screens/InternalStockUsageHistoryScreen.jsx';
 
 const DEFAULT_VIEW = 'products';
 
@@ -50,6 +52,8 @@ const NAV_GROUPS = [
     items: [
       { key: 'stock', label: 'Stok', icon: Warehouse },
       { key: 'stockHistory', label: 'Riwayat Stok', icon: History },
+      { key: 'internalStockUsage', label: 'Pemakaian Internal', icon: PackageMinus },
+      { key: 'internalStockUsageHistory', label: 'Riwayat Pemakaian Internal', icon: History },
     ],
   },
   {
@@ -234,6 +238,8 @@ export default function App() {
         )}
         {view === 'stock' && <StockScreen />}
         {view === 'stockHistory' && <StockHistoryScreen />}
+        {view === 'internalStockUsage' && <InternalStockUsageScreen />}
+        {view === 'internalStockUsageHistory' && <InternalStockUsageHistoryScreen />}
         {view === 'categories' && <CategoriesScreen />}
         {view === 'units' && <UnitsScreen />}
         {view === 'priceLevels' && <PriceLevelsScreen />}
