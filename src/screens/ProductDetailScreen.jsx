@@ -116,7 +116,10 @@ export default function ProductDetailScreen({ productId, onBack }) {
 
   function startEditPrice(p) {
     setEditingPriceId(p.id);
-    setEditPriceDraft(String(p.price));
+    // Dibulatkan ke rupiah utuh saat mulai edit MANUAL — beda dgn nilai
+    // tersimpan yang boleh berpecahan kalau hasil markup otomatis (lihat
+    // catatan di atas tabel Harga). Manusia mengetik harga, wajar dibulatkan.
+    setEditPriceDraft(String(Math.round(Number(p.price))));
   }
 
   async function submitEditPrice(priceId) {
@@ -282,13 +285,9 @@ export default function ProductDetailScreen({ productId, onBack }) {
                 <td>
                   {editingPriceId === p.id ? (
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <input
-                        className="input"
-                        type="number"
-                        min="0"
-                        step="0.0001"
+                      <MoneyInput
                         value={editPriceDraft}
-                        onChange={(e) => setEditPriceDraft(e.target.value)}
+                        onChange={setEditPriceDraft}
                         style={{ width: 130 }}
                         autoFocus
                       />

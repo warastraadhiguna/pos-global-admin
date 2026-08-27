@@ -69,10 +69,7 @@ export default function ProductsScreen({ onSelectProduct }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Produk</h2>
-        <button className="btn-primary" onClick={() => setShowCreate(true)}>+ Tambah Produk</button>
-      </div>
+      <h2>Produk</h2>
       <Banner type="error" message={error} onClose={() => setError(null)} />
 
       {showCreate && (
@@ -98,13 +95,16 @@ export default function ProductsScreen({ onSelectProduct }) {
       )}
 
       <div className="card">
-        <input
-          className="input"
-          style={{ width: '100%', maxWidth: 360, marginBottom: 12 }}
-          placeholder="Cari nama/SKU produk..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div className="inline-form" style={{ marginBottom: 12 }}>
+          <input
+            className="input"
+            style={{ width: '100%', maxWidth: 360 }}
+            placeholder="Cari nama/SKU produk..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <button className="btn-primary" onClick={() => setShowCreate(true)}>+ Tambah Produk</button>
+        </div>
         <table>
           <thead><tr><th>SKU</th><th>Nama</th><th>Kategori</th><th>Satuan Dasar</th><th>Status</th><th></th></tr></thead>
           <tbody>
