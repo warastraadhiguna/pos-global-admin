@@ -54,7 +54,14 @@ export const api = {
   createPriceLevel: (payload) => request('/price-levels', { method: 'POST', body: payload }),
   updatePriceLevel: (id, payload) => request(`/price-levels/${id}`, { method: 'PUT', body: payload }),
 
-  listProducts: () => request('/admin/products'),
+  listProducts: ({ q, page, limit } = {}) => {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (page) params.set('page', page);
+    if (limit) params.set('limit', limit);
+    const qs = params.toString();
+    return request(`/admin/products${qs ? `?${qs}` : ''}`);
+  },
   searchProducts: (q) => request(`/products/search?q=${encodeURIComponent(q)}`),
   getProduct: (id) => request(`/admin/products/${id}`),
   listProductStock: () => request('/products/stock'),

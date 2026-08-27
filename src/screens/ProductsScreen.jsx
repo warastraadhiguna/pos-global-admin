@@ -1,24 +1,53 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 import Banner from '../components/Banner.jsx';
 
+const PAGE_SIZE = 20;
+
 export default function ProductsScreen({ onSelectProduct }) {
   const [products, setProducts] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('');
   const [categories, setCategories] = useState([]);
   const [units, setUnits] = useState([]);
   const [error, setError] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({ name: '', sku: '', categoryId: '', baseUnitId: '' });
 
-  function reload() {
-    api.listProducts().then((d) => setProducts(d.products)).catch((err) => setError(err.message));
+  function reload(targetPage = page) {
+    api.listProducts({ q: query, page: targetPage, limit: PAGE_SIZE })
+      .then((d) => {
+        setProducts(d.products);
+        setTotal(d.total);
+        setPage(d.page);
+      })
+      .catch((err) => setError(err.message));
   }
 
+  // Search-as-you-type dgn debounce, sama pola dgn search-select lain di
+  // admin panel — reset ke halaman 1 tiap kali kata kuncinya berubah
+  // (hasil pencarian baru, halaman lama sudah tidak relevan). Load
+  // PERTAMA (mount) sengaja TIDAK ikut nunggu debounce — biar daftar
+  // langsung tampil begitu halaman dibuka, tidak delay 300ms utk kosong.
+  const isFirstRun = useRef(true);
   useEffect(() => {
-    reload();
+    if (isFirstRun.current) {
+      isFirstRun.current = false;
+      reload(1);
+      return;
+    }
+    const timer = setTimeout(() => reload(1), 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
+  useEffect(() => {
     api.listCategories().then((d) => setCategories(d.categories));
     api.listUnits().then((d) => setUnits(d.units));
   }, []);
+
+  const totalPages = Math.max(Math.ceil(total / PAGE_SIZE), 1);
 
   async function submitCreate(e) {
     e.preventDefault();
@@ -69,6 +98,13 @@ export default function ProductsScreen({ onSelectProduct }) {
       )}
 
       <div className="card">
+        <input
+          className="input"
+          style={{ width: '100%', maxWidth: 360, marginBottom: 12 }}
+          placeholder="Cari nama/SKU produk..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
         <table>
           <thead><tr><th>SKU</th><th>Nama</th><th>Kategori</th><th>Satuan Dasar</th><th>Status</th><th></th></tr></thead>
           <tbody>
@@ -82,9 +118,26 @@ export default function ProductsScreen({ onSelectProduct }) {
                 <td><button className="btn-secondary" onClick={() => onSelectProduct(p.id)}>Kelola</button></td>
               </tr>
             ))}
-            {products.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', color: '#999', padding: 20 }}>Belum ada produk</td></tr>}
+            {products.length === 0 && (
+              <tr><td colSpan={6} style={{ textAlign: 'center', color: '#999', padding: 20 }}>
+                {query ? 'Tidak ada produk yang cocok' : 'Belum ada produk'}
+              </td></tr>
+            )}
           </tbody>
         </table>
+
+        {total > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
+            <span style={{ fontSize: 13, color: '#666' }}>
+              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} dari {total} produk
+            </span>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button className="btn-secondary" disabled={page <= 1} onClick={() => reload(page - 1)}>&larr; Sebelumnya</button>
+              <span style={{ fontSize: 13, color: '#666' }}>Halaman {page} / {totalPages}</span>
+              <button className="btn-secondary" disabled={page >= totalPages} onClick={() => reload(page + 1)}>Berikutnya &rarr;</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
