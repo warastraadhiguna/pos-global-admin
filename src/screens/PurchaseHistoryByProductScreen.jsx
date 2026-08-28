@@ -1,6 +1,5 @@
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api.js';
-import JournalPreview from '../components/JournalPreview.jsx';
 import Banner from '../components/Banner.jsx';
 
 function rp(n) {
@@ -10,56 +9,37 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function InterveningNote({ movements }) {
-  if (!movements || movements.length === 0) return null;
-  const productNames = [...new Set(movements.map((m) => m.product_name))];
-  return (
-    <div className="error-banner" style={{ border: '2px solid #d97706', background: '#fffbeb', color: '#92400e', fontSize: 13 }}>
-      ⚠️ Ada {movements.length} transaksi lain terjadi SEJAK pembelian ini dibuat, melibatkan: {productNames.join(', ')}.
-      Selisih tetap dihitung dgn benar (nilai pembelian ini dikeluarkan persis dari pool saat ini), tapi avg cost hasilnya
-      bisa terlihat tidak seperti harga wajar manapun — itu konsekuensi matematis yang tak terhindarkan, bukan kesalahan
-      hitung, begitu ada transaksi lain memakai stok yang sama sebelum pembelian ini di-void.
-    </div>
-  );
-}
-
 const PAGE_SIZE = 20;
 
-export default function PurchaseHistoryScreen() {
-  const [purchases, setPurchases] = useState([]);
+export default function PurchaseHistoryByProductScreen() {
+  const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [query, setQuery] = useState('');
   const [dateFrom, setDateFrom] = useState(todayStr());
   const [dateTo, setDateTo] = useState(todayStr());
-  const [accounts, setAccounts] = useState([]);
   const [error, setError] = useState(null);
-
-  const [voidingId, setVoidingId] = useState(null);
-  const [voidReason, setVoidReason] = useState('');
-  const [voidResult, setVoidResult] = useState(null);
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
   function reload(targetPage = page) {
-    api.listPurchases({ q: query, dateFrom, dateTo, page: targetPage, limit: PAGE_SIZE })
+    api.listPurchaseItemsByProduct({ q: query, dateFrom, dateTo, page: targetPage, limit: PAGE_SIZE })
       .then((d) => {
-        setPurchases(d.purchases);
+        setItems(d.items);
         setTotal(d.total);
         setPage(d.page);
       })
       .catch((err) => setError(err.message));
   }
 
-  // Filter TIDAK otomatis jalan tiap ketik/ganti tanggal (beda dari pola
-  // sebelumnya) — baru diterapkan begitu tombol "Cari" diklik/form
-  // disubmit. Diminta eksplisit: auto-filter bikin query berulang2 kalau
-  // datanya banyak. Cuma load AWAL (mount) yang otomatis.
+  // Filter TIDAK otomatis jalan tiap ketik/ganti tanggal — baru diterapkan
+  // begitu tombol "Cari" diklik/form disubmit (diminta eksplisit: auto-
+  // filter bikin query berulang2 kalau datanya banyak). Cuma load AWAL
+  // (mount) yang otomatis.
   useEffect(() => {
     reload(1);
-    api.listAccountingAccounts().then((d) => setAccounts(d.accounts)).catch((err) => setError(err.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -69,11 +49,6 @@ export default function PurchaseHistoryScreen() {
   }
 
   const totalPages = Math.max(Math.ceil(total / PAGE_SIZE), 1);
-
-  function accountLabel(id) {
-    const a = accounts.find((x) => x.id === id);
-    return a ? `${a.code} ${a.name}` : id;
-  }
 
   function openDetail(purchaseId) {
     setDetailOpen(true);
@@ -89,70 +64,21 @@ export default function PurchaseHistoryScreen() {
     setDetail(null);
   }
 
-  function startVoid(purchaseId) {
-    setVoidingId(purchaseId);
-    setVoidReason('');
-    setVoidResult(null);
-  }
-  function cancelVoid() {
-    setVoidingId(null);
-    setVoidReason('');
-  }
-  async function confirmVoid(purchaseId) {
-    if (!voidReason.trim()) {
-      setError('Alasan void wajib diisi');
-      return;
-    }
-    setError(null);
-    try {
-      const result = await api.voidPurchase(purchaseId, { reason: voidReason.trim() });
-      setVoidResult(result);
-      setVoidingId(null);
-      setVoidReason('');
-      reload();
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
   return (
     <div>
-      <h2>Riwayat Pembelian</h2>
+      <h2>Riwayat Pembelian per Produk</h2>
+      <p style={{ color: '#666', marginTop: -8 }}>
+        Read-only. Semua kejadian pembelian yang SUDAH TEREALISASI (bukan draft) untuk produk tertentu — lengkap
+        harga, diskon, dan jumlahnya. Klik "Lihat Nota" untuk detail nota lengkapnya.
+      </p>
       <Banner type="error" message={error} onClose={() => setError(null)} />
-
-      {voidResult && (
-        <div className="card" style={{ marginBottom: 20 }}>
-          <strong>Hasil Void Pembelian {voidResult.purchaseNumber}</strong>
-          <InterveningNote movements={voidResult.interveningMovements} />
-          {voidResult.journalEntry ? (
-            <JournalPreview entry={voidResult.journalEntry} accountLabel={accountLabel} />
-          ) : (
-            <div style={{ fontSize: 13, color: '#999', marginTop: 8 }}>Tidak ada jurnal untuk dibalik.</div>
-          )}
-          <table style={{ marginTop: 8 }}>
-            <thead><tr><th>Produk</th><th>Stok Sebelum</th><th>Avg Cost Sebelum</th><th>Stok Sesudah</th><th>Avg Cost Sesudah</th><th></th></tr></thead>
-            <tbody>
-              {voidResult.items.map((it, i) => (
-                <tr key={i}>
-                  <td>{it.productName || it.productId}</td>
-                  <td>{Number(it.qtyBaseBefore).toLocaleString('id-ID')}</td>
-                  <td>{rp(it.avgCostBefore)}</td>
-                  <td>{Number(it.qtyBaseAfter).toLocaleString('id-ID')}</td>
-                  <td>{rp(it.avgCostAfter)}</td>
-                  <td>{it.hadInterveningTransaction && <span className="badge inactive">ada transaksi di tengah</span>}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
 
       <div className="card">
         <form className="inline-form" style={{ marginBottom: 12 }} onSubmit={submitFilter}>
           <input
             className="input"
             style={{ width: '100%', maxWidth: 320 }}
-            placeholder="Cari No. Pembelian / Supplier..."
+            placeholder="Cari nama/SKU produk..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -162,48 +88,30 @@ export default function PurchaseHistoryScreen() {
           <button className="btn-primary" type="submit">Cari</button>
         </form>
         <table>
-          <thead><tr><th>No. Pembelian</th><th>Tanggal</th><th>Supplier</th><th>DPP</th><th>PPN Masukan</th><th>Total</th><th>Bayar</th><th>Status</th><th></th></tr></thead>
+          <thead>
+            <tr>
+              <th>Tanggal</th><th>No. Pembelian</th><th>Produk</th><th>Satuan</th><th>Qty</th>
+              <th>Harga/Satuan</th><th>Diskon</th><th>Subtotal</th><th>Supplier</th><th>Status</th><th></th>
+            </tr>
+          </thead>
           <tbody>
-            {purchases.map((p) => (
-              <Fragment key={p.id}>
-                <tr>
-                  <td>{p.purchase_number}</td>
-                  <td>{new Date(p.purchase_date).toLocaleDateString('id-ID')}</td>
-                  <td>{p.supplier_name}</td>
-                  <td>{rp(p.dpp)}</td>
-                  <td>
-                    {!p.ppn_mode && '-'}
-                    {p.ppn_mode && Number(p.ppn_amount) > 0 && `${rp(p.ppn_amount)} (${p.ppn_mode === 'exclude' ? 'exclude' : 'included'})`}
-                    {p.ppn_mode && Number(p.ppn_amount) === 0 && 'melebur ke HPP (non-PKP)'}
-                  </td>
-                  <td>{rp(p.grand_total)}</td>
-                  <td>{p.payment_type === 'cash' ? 'Tunai' : 'Kredit'}</td>
-                  <td><span className={`badge ${p.status === 'completed' ? 'active' : 'inactive'}`}>{p.status === 'completed' ? 'Selesai' : 'Void'}</span></td>
-                  <td style={{ display: 'flex', gap: 6 }}>
-                    <button className="btn-secondary" onClick={() => openDetail(p.id)}>Detail</button>
-                    {p.status === 'completed' && voidingId !== p.id && (
-                      <button className="btn-danger" onClick={() => startVoid(p.id)}>Void</button>
-                    )}
-                  </td>
-                </tr>
-                {voidingId === p.id && (
-                  <tr>
-                    <td colSpan={9}>
-                      <div className="inline-form" style={{ margin: 0 }}>
-                        <input
-                          className="input" placeholder="Alasan void (wajib)" style={{ flex: 1, minWidth: 240 }}
-                          value={voidReason} onChange={(e) => setVoidReason(e.target.value)} autoFocus
-                        />
-                        <button className="btn-danger" onClick={() => confirmVoid(p.id)} disabled={!voidReason.trim()}>Konfirmasi Void</button>
-                        <button className="btn-secondary" onClick={cancelVoid}>Batal</button>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </Fragment>
+            {items.map((it) => (
+              <tr key={it.id}>
+                <td>{new Date(it.purchase_date).toLocaleDateString('id-ID')}</td>
+                <td>{it.purchase_number}</td>
+                <td>{it.product_name}{it.sku ? <div style={{ fontSize: 12, color: '#999' }}>{it.sku}</div> : null}</td>
+                <td>{it.unit_name}</td>
+                <td>{Number(it.quantity).toLocaleString('id-ID')}</td>
+                <td>{rp(it.cost_per_unit)}</td>
+                <td>{Number(it.discount_amount) > 0 ? `- ${rp(it.discount_amount)}` : '-'}</td>
+                <td>{rp(it.subtotal)}</td>
+                <td>{it.supplier_name}</td>
+                <td><span className={`badge ${it.status === 'completed' ? 'active' : 'inactive'}`}>{it.status === 'completed' ? 'Selesai' : 'Void'}</span></td>
+                <td><button className="btn-secondary" onClick={() => openDetail(it.purchase_id)}>Lihat Nota</button></td>
+              </tr>
             ))}
-            {purchases.length === 0 && (
-              <tr><td colSpan={9} style={{ textAlign: 'center', color: '#999', padding: 20 }}>
+            {items.length === 0 && (
+              <tr><td colSpan={11} style={{ textAlign: 'center', color: '#999', padding: 20 }}>
                 {query || dateFrom || dateTo ? 'Tidak ada pembelian yang cocok dengan filter ini' : 'Belum ada pembelian'}
               </td></tr>
             )}
@@ -213,7 +121,7 @@ export default function PurchaseHistoryScreen() {
         {total > 0 && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 12 }}>
             <span style={{ fontSize: 13, color: '#666' }}>
-              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} dari {total} pembelian
+              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} dari {total} baris pembelian
             </span>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button className="btn-secondary" disabled={page <= 1} onClick={() => reload(page - 1)}>&larr; Sebelumnya</button>

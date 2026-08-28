@@ -137,7 +137,26 @@ export const api = {
   createSupplier: (payload) => request('/admin/suppliers', { method: 'POST', body: payload }),
   updateSupplier: (id, payload) => request(`/admin/suppliers/${id}`, { method: 'PUT', body: payload }),
 
-  listPurchases: () => request('/admin/purchases'),
+  listPurchases: ({ q, dateFrom, dateTo, page, limit } = {}) => {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (dateFrom) params.set('dateFrom', dateFrom);
+    if (dateTo) params.set('dateTo', dateTo);
+    if (page) params.set('page', page);
+    if (limit) params.set('limit', limit);
+    const qs = params.toString();
+    return request(`/admin/purchases${qs ? `?${qs}` : ''}`);
+  },
+  listPurchaseItemsByProduct: ({ q, dateFrom, dateTo, page, limit } = {}) => {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (dateFrom) params.set('dateFrom', dateFrom);
+    if (dateTo) params.set('dateTo', dateTo);
+    if (page) params.set('page', page);
+    if (limit) params.set('limit', limit);
+    const qs = params.toString();
+    return request(`/admin/purchases/by-product${qs ? `?${qs}` : ''}`);
+  },
   getPurchase: (id) => request(`/admin/purchases/${id}`),
   createPurchase: (payload) => request('/admin/purchases', { method: 'POST', body: payload }),
   voidPurchase: (id, payload) => request(`/admin/purchases/${id}/void`, { method: 'POST', body: payload }),

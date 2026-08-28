@@ -3,7 +3,7 @@ import {
   Package, Folder, Ruler, Tag, Banknote, CreditCard, Users, Truck,
   ShoppingCart, ClipboardCheck, Receipt, Building, BarChart, TrendingUp,
   ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut, FileText, Store, ShieldCheck,
-  History, RotateCcw, Warehouse, PackageMinus, DatabaseBackup,
+  History, RotateCcw, Warehouse, PackageMinus, DatabaseBackup, PackageSearch,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
 import LoginScreen from './screens/LoginScreen.jsx';
@@ -33,6 +33,7 @@ import StockHistoryScreen from './screens/StockHistoryScreen.jsx';
 import InternalStockUsageScreen from './screens/InternalStockUsageScreen.jsx';
 import InternalStockUsageHistoryScreen from './screens/InternalStockUsageHistoryScreen.jsx';
 import BackupScreen from './screens/BackupScreen.jsx';
+import PurchaseHistoryByProductScreen from './screens/PurchaseHistoryByProductScreen.jsx';
 
 const DEFAULT_VIEW = 'products';
 
@@ -72,6 +73,7 @@ const NAV_GROUPS = [
       { key: 'suppliers', label: 'Supplier', icon: Truck },
       { key: 'purchases', label: 'Pembelian', icon: ShoppingCart },
       { key: 'purchaseHistory', label: 'Riwayat Pembelian', icon: History },
+      { key: 'purchaseHistoryByProduct', label: 'Riwayat Pembelian per Produk', icon: PackageSearch },
       { key: 'purchaseReturns', label: 'Retur Pembelian', icon: RotateCcw },
       { key: 'stockOpname', label: 'Stock Opname', icon: ClipboardCheck },
     ],
@@ -250,6 +252,7 @@ export default function App() {
         {view === 'suppliers' && <SuppliersScreen />}
         {view === 'purchases' && <PurchasesScreen />}
         {view === 'purchaseHistory' && <PurchaseHistoryScreen />}
+        {view === 'purchaseHistoryByProduct' && <PurchaseHistoryByProductScreen />}
         {view === 'purchaseReturns' && <PurchaseReturnsScreen />}
         {view === 'stockOpname' && <StockOpnameScreen />}
         {view === 'users' && <UsersScreen />}
