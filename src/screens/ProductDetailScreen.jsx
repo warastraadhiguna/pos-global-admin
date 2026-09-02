@@ -17,6 +17,8 @@ export default function ProductDetailScreen({ productId, onBack }) {
   const [newPrice, setNewPrice] = useState({ unitId: '', priceLevelId: '', minQtyBase: '0', price: '' });
   const [editingPriceId, setEditingPriceId] = useState(null);
   const [editPriceDraft, setEditPriceDraft] = useState('');
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   function reload() {
     api.getProduct(productId).then((d) => {
@@ -146,11 +148,34 @@ export default function ProductDetailScreen({ productId, onBack }) {
     }
   }
 
+  // Hapus PERMANEN — cuma boleh kalau server mengonfirmasi produk ini
+  // BELUM PERNAH tersentuh transaksi (detail.product.hasHistory === false).
+  // Beda dari toggle Aktif/Nonaktif di form Info Produk (itu soft-delete,
+  // tetap tersimpan utk produk yang sudah py riwayat).
+  async function confirmDeleteProduct() {
+    setDeleting(true);
+    setError(null);
+    try {
+      await api.deleteProduct(productId);
+      onBack();
+    } catch (err) {
+      setError(err.message);
+      setConfirmDeleteOpen(false);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (!detail) return <div>Memuat...</div>;
 
   return (
     <div>
-      <button className="btn-secondary" onClick={onBack} style={{ marginBottom: 16 }}>&larr; Kembali ke daftar produk</button>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <button className="btn-secondary" onClick={onBack}>&larr; Kembali ke daftar produk</button>
+        {detail.product.hasHistory === false && (
+          <button className="btn-danger" onClick={() => setConfirmDeleteOpen(true)}>🗑️ Hapus Produk</button>
+        )}
+      </div>
       <Banner type="error" message={error} onClose={() => setError(null)} />
       <Banner type="success" message={info} onClose={() => setInfo(null)} />
 
@@ -341,6 +366,25 @@ export default function ProductDetailScreen({ productId, onBack }) {
         </form>
       </div>
       </div>
+
+      {confirmDeleteOpen && (
+        <div className="modal-overlay">
+          <div className="card" style={{ width: 420 }}>
+            <h3 style={{ marginTop: 0 }}>Hapus Produk Permanen?</h3>
+            <p style={{ fontSize: 14 }}>
+              Produk <strong>{detail.product.name}</strong> beserta semua satuan, barcode, dan harganya akan
+              dihapus PERMANEN — tidak bisa dibatalkan. Ini aman dilakukan krn produk ini belum pernah dipakai
+              di pembelian, penjualan, atau stok mana pun.
+            </p>
+            <button className="btn-danger" style={{ width: '100%', marginBottom: 8 }} onClick={confirmDeleteProduct} disabled={deleting}>
+              {deleting ? 'Menghapus...' : 'Ya, Hapus Permanen'}
+            </button>
+            <button className="btn-secondary" style={{ width: '100%' }} onClick={() => setConfirmDeleteOpen(false)} disabled={deleting}>
+              Batal
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

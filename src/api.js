@@ -76,6 +76,7 @@ export const api = {
   },
   createProduct: (payload) => request('/admin/products', { method: 'POST', body: payload }),
   updateProduct: (id, payload) => request(`/admin/products/${id}`, { method: 'PUT', body: payload }),
+  deleteProduct: (id) => request(`/admin/products/${id}`, { method: 'DELETE' }),
 
   addProductUnit: (productId, payload) => request(`/admin/products/${productId}/units`, { method: 'POST', body: payload }),
   updateProductUnit: (productId, unitId, payload) => request(`/admin/products/${productId}/units/${unitId}`, { method: 'PUT', body: payload }),
