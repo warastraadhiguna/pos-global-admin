@@ -34,6 +34,7 @@ import InternalStockUsageScreen from './screens/InternalStockUsageScreen.jsx';
 import InternalStockUsageHistoryScreen from './screens/InternalStockUsageHistoryScreen.jsx';
 import BackupScreen from './screens/BackupScreen.jsx';
 import PurchaseHistoryByProductScreen from './screens/PurchaseHistoryByProductScreen.jsx';
+import SalesReturnsScreen from './screens/SalesReturnsScreen.jsx';
 
 const DEFAULT_VIEW = 'products';
 
@@ -91,6 +92,7 @@ const NAV_GROUPS = [
     items: [
       { key: 'reports', label: 'Laporan Penjualan', icon: TrendingUp },
       { key: 'transactionsReport', label: 'Laporan Transaksi', icon: FileText },
+      { key: 'salesReturns', label: 'Retur Penjualan', icon: RotateCcw },
       { key: 'priceChangeNotifications', label: 'Notifikasi Harga', icon: Bell },
     ],
   },
@@ -254,6 +256,7 @@ export default function App() {
         {view === 'purchaseHistory' && <PurchaseHistoryScreen />}
         {view === 'purchaseHistoryByProduct' && <PurchaseHistoryByProductScreen />}
         {view === 'purchaseReturns' && <PurchaseReturnsScreen />}
+        {view === 'salesReturns' && <SalesReturnsScreen />}
         {view === 'stockOpname' && <StockOpnameScreen />}
         {view === 'users' && <UsersScreen />}
         {view === 'roles' && <RolesScreen />}

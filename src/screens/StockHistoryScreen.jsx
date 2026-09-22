@@ -10,6 +10,7 @@ const MOVEMENT_TYPE_LABELS = {
   internal_use: 'Pemakaian Internal',
   internal_use_void: 'Void Pemakaian Internal',
   sale: 'Penjualan',
+  sales_return: 'Retur Penjualan',
   void_reversal: 'Void Penjualan',
   opname: 'Stock Opname',
   opening_balance: 'Saldo Awal',

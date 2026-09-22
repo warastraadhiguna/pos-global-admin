@@ -169,6 +169,11 @@ export const api = {
   listPurchaseReturns: () => request('/admin/purchase-returns'),
   createPurchaseReturn: (payload) => request('/admin/purchase-returns', { method: 'POST', body: payload }),
 
+  listSalesReturns: () => request('/admin/sales-returns'),
+  getSalesReturn: (id) => request(`/admin/sales-returns/${id}`),
+  lookupSaleForReturn: (saleNumber) => request(`/admin/sales-returns/lookup-sale?saleNumber=${encodeURIComponent(saleNumber)}`),
+  createSalesReturn: (payload) => request('/admin/sales-returns', { method: 'POST', body: payload }),
+
   listInternalStockUsages: () => request('/admin/internal-stock-usage'),
   getInternalStockUsage: (id) => request(`/admin/internal-stock-usage/${id}`),
   createInternalStockUsage: (payload) => request('/admin/internal-stock-usage', { method: 'POST', body: payload }),
