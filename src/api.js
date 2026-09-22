@@ -105,6 +105,10 @@ export const api = {
   updateUserRole: (id, roleId) => request(`/admin/users/${id}/role`, { method: 'PUT', body: { roleId } }),
   deleteUser: (id) => request(`/admin/users/${id}`, { method: 'DELETE' }),
 
+  getTotpStatus: (id) => request(`/admin/users/${id}/totp-setup`),
+  setupTotp: (id) => request(`/admin/users/${id}/totp-setup`, { method: 'POST' }),
+  disableTotp: (id) => request(`/admin/users/${id}/totp-setup`, { method: 'DELETE' }),
+
   listRoles: () => request('/admin/roles'),
   getPermissionsCatalog: () => request('/admin/roles/permissions-catalog'),
   getRolePermissionIds: (roleId) => request(`/admin/roles/${roleId}/permissions`),
