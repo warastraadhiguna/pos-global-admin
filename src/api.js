@@ -172,6 +172,7 @@ export const api = {
   listInternalStockUsages: () => request('/admin/internal-stock-usage'),
   getInternalStockUsage: (id) => request(`/admin/internal-stock-usage/${id}`),
   createInternalStockUsage: (payload) => request('/admin/internal-stock-usage', { method: 'POST', body: payload }),
+  voidInternalStockUsage: (id, reason) => request(`/admin/internal-stock-usage/${id}/void`, { method: 'POST', body: { reason } }),
 
   listPurchaseDrafts: () => request('/admin/purchase-drafts'),
   createPurchaseDraft: (payload) => request('/admin/purchase-drafts', { method: 'POST', body: payload }),

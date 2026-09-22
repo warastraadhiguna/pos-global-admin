@@ -14,6 +14,10 @@ export default function InternalStockUsageHistoryScreen() {
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
+  const [voidOpen, setVoidOpen] = useState(false);
+  const [voidReason, setVoidReason] = useState('');
+  const [voiding, setVoiding] = useState(false);
+
   function reload() {
     api.listInternalStockUsages().then((d) => setUsages(d.usages)).catch((err) => setError(err.message));
   }
@@ -31,19 +35,43 @@ export default function InternalStockUsageHistoryScreen() {
   function closeDetail() {
     setDetailOpen(false);
     setDetail(null);
+    setVoidOpen(false);
+    setVoidReason('');
+  }
+
+  // Void SENGAJA cuma boleh superadmin (server yang menegakkan via
+  // requireRole('superadmin') literal, bukan izin Kelola Role) — tombol di
+  // sini tetap ditampilkan ke semua admin (pola sama dgn tombol Hapus User
+  // dkk di layar lain), kalau bukan superadmin server akan menolak &
+  // pesannya tampil di banner error.
+  async function submitVoid() {
+    if (!voidReason.trim() || !detail) return;
+    setVoiding(true);
+    try {
+      await api.voidInternalStockUsage(detail.id, voidReason.trim());
+      setVoidOpen(false);
+      setVoidReason('');
+      setError(null);
+      openDetail(detail.id);
+      reload();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setVoiding(false);
+    }
   }
 
   return (
     <div>
       <h2>Riwayat Pemakaian Internal</h2>
       <p style={{ color: '#666', marginTop: -8 }}>
-        Read-only. Semua barang dagangan yang dipakai untuk kebutuhan toko sendiri (bukan dijual).
+        Semua barang dagangan yang dipakai untuk kebutuhan toko sendiri (bukan dijual). Void hanya bisa dilakukan superadmin.
       </p>
       <Banner type="error" message={error} onClose={() => setError(null)} />
 
       <div className="card">
         <table>
-          <thead><tr><th>No. Dokumen</th><th>Tanggal</th><th>Total HPP</th><th>Diproses Oleh</th><th>Alasan</th><th></th></tr></thead>
+          <thead><tr><th>No. Dokumen</th><th>Tanggal</th><th>Total HPP</th><th>Diproses Oleh</th><th>Alasan</th><th>Status</th><th></th></tr></thead>
           <tbody>
             {usages.map((u) => (
               <tr key={u.id}>
@@ -52,10 +80,11 @@ export default function InternalStockUsageHistoryScreen() {
                 <td>{rp(u.total_value)}</td>
                 <td>{u.processed_by_name}</td>
                 <td>{u.reason}</td>
+                <td><span className={`badge ${u.status === 'voided' ? 'inactive' : 'active'}`}>{u.status === 'voided' ? 'Voided' : 'Aktif'}</span></td>
                 <td><button className="btn-secondary" onClick={() => openDetail(u.id)}>Detail</button></td>
               </tr>
             ))}
-            {usages.length === 0 && <tr><td colSpan={6} style={{ textAlign: 'center', color: '#999', padding: 20 }}>Belum ada pemakaian internal</td></tr>}
+            {usages.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', color: '#999', padding: 20 }}>Belum ada pemakaian internal</td></tr>}
           </tbody>
         </table>
       </div>
@@ -76,6 +105,33 @@ export default function InternalStockUsageHistoryScreen() {
                 <div style={{ fontSize: 13, marginBottom: 12 }}>
                   <span style={{ color: '#666' }}>Alasan</span><br />{detail.reason}
                 </div>
+
+                {detail.status === 'voided' ? (
+                  <div style={{ fontSize: 13, marginBottom: 12, background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, padding: 10 }}>
+                    <strong style={{ color: '#991b1b' }}>Sudah di-void</strong>
+                    <div>Oleh: {detail.voided_by_name} — {new Date(detail.voided_at).toLocaleString('id-ID')}</div>
+                    <div>Alasan void: {detail.void_reason}</div>
+                  </div>
+                ) : voidOpen ? (
+                  <div style={{ fontSize: 13, marginBottom: 12, border: '1px solid #eee', borderRadius: 6, padding: 10 }}>
+                    <label style={{ fontWeight: 600 }}>Alasan void (wajib)</label>
+                    <textarea
+                      className="input"
+                      style={{ width: '100%', minHeight: 50, marginTop: 4, marginBottom: 8 }}
+                      value={voidReason}
+                      onChange={(e) => setVoidReason(e.target.value)}
+                      autoFocus
+                    />
+                    <button className="btn-danger" style={{ marginRight: 8 }} onClick={submitVoid} disabled={voiding || !voidReason.trim()}>
+                      {voiding ? 'Memproses...' : 'Ya, Void Dokumen Ini'}
+                    </button>
+                    <button className="btn-secondary" onClick={() => { setVoidOpen(false); setVoidReason(''); }} disabled={voiding}>Batal</button>
+                  </div>
+                ) : (
+                  <button className="btn-danger" style={{ marginBottom: 12 }} onClick={() => setVoidOpen(true)}>
+                    Void Dokumen Ini
+                  </button>
+                )}
 
                 <table>
                   <thead><tr><th>Produk</th><th>Satuan</th><th>Qty</th><th>Qty (base)</th><th>HPP / unit</th><th>Nilai Beban</th></tr></thead>
