@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api.js';
 import Banner from '../components/Banner.jsx';
 
@@ -149,10 +149,14 @@ function OpeningInventoryBalancePanel({ onError }) {
 function TrialBalanceTab({ onError }) {
   const [asOfDate, setAsOfDate] = useState(todayStr());
   const [data, setData] = useState(null);
+  const requestIdRef = useRef(0);
 
   function load() {
     onError(null);
-    api.getTrialBalance(asOfDate).then(setData).catch((err) => onError(err.message));
+    const requestId = ++requestIdRef.current;
+    api.getTrialBalance(asOfDate)
+      .then((d) => { if (requestId === requestIdRef.current) setData(d); })
+      .catch((err) => { if (requestId === requestIdRef.current) onError(err.message); });
   }
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -197,10 +201,14 @@ function IncomeStatementTab({ onError }) {
   const [startDate, setStartDate] = useState(firstOfMonthStr());
   const [endDate, setEndDate] = useState(todayStr());
   const [data, setData] = useState(null);
+  const requestIdRef = useRef(0);
 
   function load() {
     onError(null);
-    api.getIncomeStatement(startDate, endDate).then(setData).catch((err) => onError(err.message));
+    const requestId = ++requestIdRef.current;
+    api.getIncomeStatement(startDate, endDate)
+      .then((d) => { if (requestId === requestIdRef.current) setData(d); })
+      .catch((err) => { if (requestId === requestIdRef.current) onError(err.message); });
   }
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -249,10 +257,14 @@ function IncomeStatementTab({ onError }) {
 function BalanceSheetTab({ onError }) {
   const [asOfDate, setAsOfDate] = useState(todayStr());
   const [data, setData] = useState(null);
+  const requestIdRef = useRef(0);
 
   function load() {
     onError(null);
-    api.getBalanceSheet(asOfDate).then(setData).catch((err) => onError(err.message));
+    const requestId = ++requestIdRef.current;
+    api.getBalanceSheet(asOfDate)
+      .then((d) => { if (requestId === requestIdRef.current) setData(d); })
+      .catch((err) => { if (requestId === requestIdRef.current) onError(err.message); });
   }
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -314,10 +326,14 @@ function CashFlowTab({ onError }) {
   const [startDate, setStartDate] = useState(firstOfMonthStr());
   const [endDate, setEndDate] = useState(todayStr());
   const [data, setData] = useState(null);
+  const requestIdRef = useRef(0);
 
   function load() {
     onError(null);
-    api.getCashFlow(startDate, endDate).then(setData).catch((err) => onError(err.message));
+    const requestId = ++requestIdRef.current;
+    api.getCashFlow(startDate, endDate)
+      .then((d) => { if (requestId === requestIdRef.current) setData(d); })
+      .catch((err) => { if (requestId === requestIdRef.current) onError(err.message); });
   }
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -370,13 +386,17 @@ function GeneralLedgerTab({ accounts, onError }) {
   const [startDate, setStartDate] = useState(firstOfMonthStr());
   const [endDate, setEndDate] = useState(todayStr());
   const [data, setData] = useState(null);
+  const requestIdRef = useRef(0);
 
   const postableAccounts = accounts.filter((a) => a.is_postable);
 
   function load() {
     if (!accountId) return;
     onError(null);
-    api.getGeneralLedger(accountId, startDate, endDate).then(setData).catch((err) => onError(err.message));
+    const requestId = ++requestIdRef.current;
+    api.getGeneralLedger(accountId, startDate, endDate)
+      .then((d) => { if (requestId === requestIdRef.current) setData(d); })
+      .catch((err) => { if (requestId === requestIdRef.current) onError(err.message); });
   }
 
   return (
@@ -427,10 +447,14 @@ function PpnSetoranTab({ taxMode, onError }) {
   const [startDate, setStartDate] = useState(firstOfMonthStr());
   const [endDate, setEndDate] = useState(todayStr());
   const [data, setData] = useState(null);
+  const requestIdRef = useRef(0);
 
   function load() {
     onError(null);
-    api.getPpnSetoranReport(startDate, endDate).then(setData).catch((err) => onError(err.message));
+    const requestId = ++requestIdRef.current;
+    api.getPpnSetoranReport(startDate, endDate)
+      .then((d) => { if (requestId === requestIdRef.current) setData(d); })
+      .catch((err) => { if (requestId === requestIdRef.current) onError(err.message); });
   }
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
 
