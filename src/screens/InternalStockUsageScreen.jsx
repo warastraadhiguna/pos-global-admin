@@ -195,8 +195,8 @@ export default function InternalStockUsageScreen() {
           <div className="card" style={{ width: 460 }}>
             <h3 style={{ marginTop: 0 }}>Konfirmasi Pemakaian Internal</h3>
             <p style={{ fontSize: 13, color: '#666', marginTop: -8 }}>
-              Stok akan langsung berkurang sebesar HPP berjalan. Belum ada fitur pembalik/void untuk dokumen ini —
-              periksa dulu sebelum lanjut.
+              Stok akan langsung berkurang sebesar HPP berjalan. Kalau salah, bisa di-void lewat Riwayat Pemakaian
+              Internal — tapi tetap periksa dulu sebelum lanjut, terutama satuannya (pack vs karton, dsb.).
             </p>
             <div style={{ fontSize: 14, marginBottom: 6 }}>
               Tanggal: <strong>{new Date(usageDate).toLocaleDateString('id-ID')}</strong>
