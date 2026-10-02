@@ -3,7 +3,7 @@ import {
   Package, Folder, Ruler, Tag, Banknote, CreditCard, Users, Truck,
   ShoppingCart, ClipboardCheck, Receipt, Building, BarChart, TrendingUp,
   ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut, FileText, Store, ShieldCheck,
-  History, RotateCcw, Warehouse, PackageMinus, DatabaseBackup, PackageSearch,
+  History, RotateCcw, Warehouse, PackageMinus, DatabaseBackup, PackageSearch, Lock,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
 import LoginScreen from './screens/LoginScreen.jsx';
@@ -35,6 +35,7 @@ import InternalStockUsageHistoryScreen from './screens/InternalStockUsageHistory
 import BackupScreen from './screens/BackupScreen.jsx';
 import PurchaseHistoryByProductScreen from './screens/PurchaseHistoryByProductScreen.jsx';
 import SalesReturnsScreen from './screens/SalesReturnsScreen.jsx';
+import ClosePeriodScreen from './screens/ClosePeriodScreen.jsx';
 
 const DEFAULT_VIEW = 'products';
 
@@ -85,6 +86,7 @@ const NAV_GROUPS = [
       { key: 'expenses', label: 'Beban & Prive', icon: Receipt },
       { key: 'fixedAssets', label: 'Aset Tetap & Depresiasi', icon: Building },
       { key: 'accountingReports', label: 'Laporan Keuangan', icon: BarChart },
+      { key: 'closePeriod', label: 'Tutup Buku', icon: Lock },
     ],
   },
   {
@@ -265,6 +267,7 @@ export default function App() {
         {view === 'expenses' && <ExpensesScreen />}
         {view === 'fixedAssets' && <FixedAssetsScreen />}
         {view === 'accountingReports' && <AccountingReportsScreen />}
+        {view === 'closePeriod' && <ClosePeriodScreen />}
         {view === 'reports' && <ReportsScreen />}
         {view === 'transactionsReport' && <TransactionsReportScreen />}
         {view === 'priceChangeNotifications' && <PriceChangeNotificationsScreen />}

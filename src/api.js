@@ -138,6 +138,10 @@ export const api = {
   getGeneralLedger: (accountId, startDate, endDate) => request(`/admin/accounting/reports/general-ledger?accountId=${encodeURIComponent(accountId)}&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
   getPpnSetoranReport: (startDate, endDate) => request(`/admin/accounting/reports/ppn-setoran?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`),
 
+  listAccountingPeriods: () => request('/admin/accounting/periods'),
+  closeAccountingPeriod: (payload) => request('/admin/accounting/periods/close', { method: 'POST', body: payload }),
+  reopenAccountingPeriod: (payload) => request('/admin/accounting/periods/reopen', { method: 'POST', body: payload }),
+
   listAllSuppliers: () => request('/admin/suppliers/all'),
   createSupplier: (payload) => request('/admin/suppliers', { method: 'POST', body: payload }),
   updateSupplier: (id, payload) => request(`/admin/suppliers/${id}`, { method: 'PUT', body: payload }),
