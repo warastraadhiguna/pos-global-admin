@@ -7,6 +7,7 @@ export default function StoreSettingsScreen() {
   const [nameDraft, setNameDraft] = useState('');
   const [addressDraft, setAddressDraft] = useState('');
   const [phoneDraft, setPhoneDraft] = useState('');
+  const [branchCodeDraft, setBranchCodeDraft] = useState('');
   const [taxModeDraft, setTaxModeDraft] = useState('pkp');
   const [error, setError] = useState(null);
   const [info, setInfo] = useState(null);
@@ -17,6 +18,7 @@ export default function StoreSettingsScreen() {
       setNameDraft(d.settings.store_name || '');
       setAddressDraft(d.settings.store_address || '');
       setPhoneDraft(d.settings.store_phone || '');
+      setBranchCodeDraft(d.settings.branch_code || '');
       setTaxModeDraft(d.settings.tax_mode || 'pkp');
     }).catch((err) => setError(err.message));
   }
@@ -42,6 +44,22 @@ export default function StoreSettingsScreen() {
       setSettings(d.settings);
       setError(null);
       flash('Identitas toko disimpan — struk kasir akan pakai data ini mulai transaksi berikutnya');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  const BRANCH_CODE_PATTERN = /^[A-Z0-9]{2,10}$/;
+  const branchCodeValid = branchCodeDraft === '' || BRANCH_CODE_PATTERN.test(branchCodeDraft);
+
+  async function saveBranchCode(e) {
+    e.preventDefault();
+    try {
+      const d = await api.updateStoreSettings({ branchCode: branchCodeDraft.trim() || null });
+      setSettings(d.settings);
+      setBranchCodeDraft(d.settings.branch_code || '');
+      setError(null);
+      flash(d.settings.branch_code ? `Kode Cabang disimpan: ${d.settings.branch_code}` : 'Kode Cabang dikosongkan');
     } catch (err) {
       setError(err.message);
     }
@@ -105,6 +123,35 @@ export default function StoreSettingsScreen() {
             placeholder="(opsional)"
           />
           <button className="btn-primary" type="submit">Simpan Identitas Toko</button>
+        </form>
+      </div>
+
+      <div className="card" style={{ marginBottom: 16, maxWidth: 480 }}>
+        <h3 style={{ marginTop: 0 }}>Kode Cabang</h3>
+        <p style={{ color: '#666', fontSize: 13 }}>
+          Identitas UNIK cabang ini (mis. <strong>"SMG"</strong> untuk Semarang) — dipakai nanti untuk membedakan
+          data cabang ini dari cabang lain saat laporan dikonsolidasikan ke pusat. <strong>Harus berbeda untuk
+          tiap cabang</strong> — jangan pakai kode yang sama dengan cabang lain mana pun.
+        </p>
+        {settings && !settings.branch_code && (
+          <div className="error-banner" style={{ marginBottom: 12 }}>
+            Kode Cabang belum diisi — wajib diisi sebelum toko ini bisa ikut konsolidasi laporan pusat nanti.
+          </div>
+        )}
+        <form onSubmit={saveBranchCode}>
+          <label style={{ fontSize: 13, fontWeight: 600 }}>Kode Cabang</label>
+          <input
+            className="input"
+            style={{ width: '100%', margin: '6px 0 6px', textTransform: 'uppercase' }}
+            value={branchCodeDraft}
+            onChange={(e) => setBranchCodeDraft(e.target.value.toUpperCase())}
+            placeholder='mis. "SMG"'
+            maxLength={10}
+          />
+          <p style={{ fontSize: 12, color: '#888', margin: '0 0 14px' }}>2-10 karakter, huruf/angka saja (tanpa spasi atau simbol).</p>
+          <button className="btn-primary" type="submit" disabled={!branchCodeValid || branchCodeDraft === (settings?.branch_code || '')}>
+            Simpan Kode Cabang
+          </button>
         </form>
       </div>
 
