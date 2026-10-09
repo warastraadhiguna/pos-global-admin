@@ -6,6 +6,7 @@ import {
   History, RotateCcw, Warehouse, PackageMinus, DatabaseBackup, PackageSearch, Lock, RefreshCw,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
+import ProfileMenu from './components/ProfileMenu.jsx';
 import LoginScreen from './screens/LoginScreen.jsx';
 import CategoriesScreen from './screens/CategoriesScreen.jsx';
 import UnitsScreen from './screens/UnitsScreen.jsx';
@@ -241,39 +242,44 @@ export default function App() {
           {sidebarCollapsed ? <LogOut size={18} /> : 'Keluar'}
         </button>
       </nav>
-      <div className="admin-content">
-        {view === 'products' && !selectedProductId && <ProductsScreen onSelectProduct={setSelectedProductId} />}
-        {view === 'products' && selectedProductId && (
-          <ProductDetailScreen productId={selectedProductId} onBack={() => setSelectedProductId(null)} />
-        )}
-        {view === 'stock' && <StockScreen />}
-        {view === 'stockHistory' && <StockHistoryScreen />}
-        {view === 'internalStockUsage' && <InternalStockUsageScreen />}
-        {view === 'internalStockUsageHistory' && <InternalStockUsageHistoryScreen />}
-        {view === 'categories' && <CategoriesScreen />}
-        {view === 'units' && <UnitsScreen />}
-        {view === 'priceLevels' && <PriceLevelsScreen />}
-        {view === 'cashDenominations' && <CashDenominationsScreen />}
-        {view === 'paymentMethods' && <PaymentMethodsScreen />}
-        {view === 'suppliers' && <SuppliersScreen />}
-        {view === 'purchases' && <PurchasesScreen />}
-        {view === 'purchaseHistory' && <PurchaseHistoryScreen />}
-        {view === 'purchaseHistoryByProduct' && <PurchaseHistoryByProductScreen />}
-        {view === 'purchaseReturns' && <PurchaseReturnsScreen />}
-        {view === 'salesReturns' && <SalesReturnsScreen />}
-        {view === 'stockOpname' && <StockOpnameScreen />}
-        {view === 'users' && <UsersScreen />}
-        {view === 'roles' && <RolesScreen />}
-        {view === 'storeSettings' && <StoreSettingsScreen />}
-        {view === 'backups' && <BackupScreen />}
-        {view === 'sync' && <SyncScreen />}
-        {view === 'expenses' && <ExpensesScreen />}
-        {view === 'fixedAssets' && <FixedAssetsScreen />}
-        {view === 'accountingReports' && <AccountingReportsScreen />}
-        {view === 'closePeriod' && <ClosePeriodScreen />}
-        {view === 'reports' && <ReportsScreen />}
-        {view === 'transactionsReport' && <TransactionsReportScreen />}
-        {view === 'priceChangeNotifications' && <PriceChangeNotificationsScreen />}
+      <div className="admin-main">
+        <div className="admin-topbar">
+          <ProfileMenu user={session.user} onLogout={handleLogout} />
+        </div>
+        <div className="admin-content">
+          {view === 'products' && !selectedProductId && <ProductsScreen onSelectProduct={setSelectedProductId} />}
+          {view === 'products' && selectedProductId && (
+            <ProductDetailScreen productId={selectedProductId} onBack={() => setSelectedProductId(null)} />
+          )}
+          {view === 'stock' && <StockScreen />}
+          {view === 'stockHistory' && <StockHistoryScreen />}
+          {view === 'internalStockUsage' && <InternalStockUsageScreen />}
+          {view === 'internalStockUsageHistory' && <InternalStockUsageHistoryScreen />}
+          {view === 'categories' && <CategoriesScreen />}
+          {view === 'units' && <UnitsScreen />}
+          {view === 'priceLevels' && <PriceLevelsScreen />}
+          {view === 'cashDenominations' && <CashDenominationsScreen />}
+          {view === 'paymentMethods' && <PaymentMethodsScreen />}
+          {view === 'suppliers' && <SuppliersScreen />}
+          {view === 'purchases' && <PurchasesScreen />}
+          {view === 'purchaseHistory' && <PurchaseHistoryScreen />}
+          {view === 'purchaseHistoryByProduct' && <PurchaseHistoryByProductScreen />}
+          {view === 'purchaseReturns' && <PurchaseReturnsScreen />}
+          {view === 'salesReturns' && <SalesReturnsScreen />}
+          {view === 'stockOpname' && <StockOpnameScreen />}
+          {view === 'users' && <UsersScreen />}
+          {view === 'roles' && <RolesScreen />}
+          {view === 'storeSettings' && <StoreSettingsScreen />}
+          {view === 'backups' && <BackupScreen />}
+          {view === 'sync' && <SyncScreen />}
+          {view === 'expenses' && <ExpensesScreen />}
+          {view === 'fixedAssets' && <FixedAssetsScreen />}
+          {view === 'accountingReports' && <AccountingReportsScreen />}
+          {view === 'closePeriod' && <ClosePeriodScreen />}
+          {view === 'reports' && <ReportsScreen />}
+          {view === 'transactionsReport' && <TransactionsReportScreen />}
+          {view === 'priceChangeNotifications' && <PriceChangeNotificationsScreen />}
+        </div>
       </div>
     </div>
   );

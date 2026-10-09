@@ -41,6 +41,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
 export const api = {
   loginAdmin: (username, password) => request('/auth/login', { method: 'POST', body: { username, password }, auth: false }),
   me: () => request('/auth/me'),
+  changeOwnPassword: ({ currentPassword, newPassword }) => request('/auth/change-password', { method: 'PUT', body: { currentPassword, newPassword } }),
 
   listCategories: () => request('/categories'),
   createCategory: (payload) => request('/categories', { method: 'POST', body: payload }),
