@@ -3,7 +3,7 @@ import {
   Package, Folder, Ruler, Tag, Banknote, CreditCard, Users, Truck,
   ShoppingCart, ClipboardCheck, Receipt, Building, BarChart, TrendingUp,
   ChevronRight, ChevronsLeft, ChevronsRight, Bell, LogOut, FileText, Store, ShieldCheck,
-  History, RotateCcw, Warehouse, PackageMinus, DatabaseBackup, PackageSearch, Lock,
+  History, RotateCcw, Warehouse, PackageMinus, DatabaseBackup, PackageSearch, Lock, RefreshCw,
 } from 'lucide-react';
 import { api, setAuthToken, getAuthToken } from './api.js';
 import LoginScreen from './screens/LoginScreen.jsx';
@@ -33,6 +33,7 @@ import StockHistoryScreen from './screens/StockHistoryScreen.jsx';
 import InternalStockUsageScreen from './screens/InternalStockUsageScreen.jsx';
 import InternalStockUsageHistoryScreen from './screens/InternalStockUsageHistoryScreen.jsx';
 import BackupScreen from './screens/BackupScreen.jsx';
+import SyncScreen from './screens/SyncScreen.jsx';
 import PurchaseHistoryByProductScreen from './screens/PurchaseHistoryByProductScreen.jsx';
 import SalesReturnsScreen from './screens/SalesReturnsScreen.jsx';
 import ClosePeriodScreen from './screens/ClosePeriodScreen.jsx';
@@ -67,6 +68,7 @@ const NAV_GROUPS = [
       { key: 'roles', label: 'Kelola Role', icon: ShieldCheck },
       { key: 'storeSettings', label: 'Pengaturan Toko', icon: Store },
       { key: 'backups', label: 'Backup Database', icon: DatabaseBackup },
+      { key: 'sync', label: 'Sinkronisasi ke Pusat', icon: RefreshCw },
     ],
   },
   {
@@ -264,6 +266,7 @@ export default function App() {
         {view === 'roles' && <RolesScreen />}
         {view === 'storeSettings' && <StoreSettingsScreen />}
         {view === 'backups' && <BackupScreen />}
+        {view === 'sync' && <SyncScreen />}
         {view === 'expenses' && <ExpensesScreen />}
         {view === 'fixedAssets' && <FixedAssetsScreen />}
         {view === 'accountingReports' && <AccountingReportsScreen />}

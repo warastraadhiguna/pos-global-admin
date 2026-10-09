@@ -200,6 +200,10 @@ export const api = {
   updateBackupSettings: (payload) => request('/admin/backups/settings', { method: 'PUT', body: payload }),
   runBackupNow: () => request('/admin/backups/run', { method: 'POST' }),
   deleteBackup: (id) => request(`/admin/backups/${id}`, { method: 'DELETE' }),
+
+  getSyncStatus: () => request('/admin/sync'),
+  updateSyncSettings: (payload) => request('/admin/sync/settings', { method: 'PUT', body: payload }),
+  runSyncNow: () => request('/admin/sync/run', { method: 'POST' }),
   // Bukan lewat request() biasa — respons endpoint ini file mentah (bukan
   // JSON), dan perlu Authorization header (jadi tidak bisa pakai <a href>
   // polos, browser tidak ikut kirim Bearer token pada navigasi biasa).
