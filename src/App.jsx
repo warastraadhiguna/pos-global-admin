@@ -136,6 +136,7 @@ export default function App() {
   const [view, setView] = useState(DEFAULT_VIEW);
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [unreadPriceCount, setUnreadPriceCount] = useState(0);
+  const [storeName, setStoreName] = useState(null);
   // Sidebar collapse — cuma UI, sama seperti openGroups di bawah sengaja
   // tidak persisten (reset tiap refresh), murni dikendalikan klik user.
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -183,6 +184,18 @@ export default function App() {
     api.countUnreadPriceChangeNotifications().then((d) => setUnreadPriceCount(d.count)).catch(() => {});
   }, [session, view]);
 
+  // Nama di pojok kiri atas sidebar ikut nama toko sungguhan (store_settings
+  // — satu-satunya sumber, sama yang dipakai di struk, BUKAN env/hardcode
+  // terpisah yang bisa beda sendiri). Sekali per sesi cukup — jarang
+  // berubah, dan StoreSettingsScreen sendiri yang reload kalau user ganti.
+  // Gagal diam-diam (fallback "POS Admin") kalau role ini kebetulan tidak
+  // punya izin store_settings.view — bukan krusial, jangan sampai bikin
+  // sidebar error cuma gara2 label.
+  useEffect(() => {
+    if (!session) return;
+    api.getStoreSettings().then((d) => setStoreName(d.settings.store_name)).catch(() => {});
+  }, [session]);
+
   function toggleGroup(label) {
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
   }
@@ -210,7 +223,7 @@ export default function App() {
     <div className={`admin-layout${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
       <nav className="admin-nav">
         <div className="brand">
-          {!sidebarCollapsed && <span>POS Admin</span>}
+          {!sidebarCollapsed && <span className="brand-name" title={storeName || 'POS Admin'}>{storeName || 'POS Admin'}</span>}
           <button
             type="button"
             className="nav-collapse-toggle"

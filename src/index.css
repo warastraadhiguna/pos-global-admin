@@ -100,7 +100,14 @@ input, select { font-family: inherit; }
   display: flex;
   flex-direction: column;
 }
-.admin-nav .brand { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px 20px 20px; font-weight: 700; font-size: 16px; }
+.admin-nav .brand { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px 20px 20px; font-weight: 700; font-size: 16px; }
+.admin-nav .brand-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .admin-nav .nav-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; }
 .admin-nav > button { flex-shrink: 0; margin-top: 0; border-top: 1px solid #1f2937; padding-top: 14px; }
 .sidebar-collapsed .admin-nav .brand { padding: 0 8px 20px; justify-content: center; }
@@ -112,6 +119,16 @@ input, select { font-family: inherit; }
   display: flex;
   align-items: center;
   border-radius: 4px;
+}
+/* Spesifisitas ".admin-nav button" (1 kelas+1 elemen) lebih tinggi drpd
+   ".nav-collapse-toggle" sendirian (1 kelas) — width:100% dari situ
+   (ditujukan utk tombol menu sidebar yang bertumpuk vertikal) tetap
+   menang kalau cuma ditimpa di atas. Di sini jadi flex-basis 100% dari
+   .brand, memakan SEMUA ruang baris & menyisakan 0 utk .brand-name
+   tumbuh — override lewat selector SEPADAN spesifisitasnya. */
+.admin-nav .nav-collapse-toggle {
+  width: auto;
+  flex-shrink: 0;
 }
 .nav-collapse-toggle:hover { background: #1f2937; color: #fff; }
 
