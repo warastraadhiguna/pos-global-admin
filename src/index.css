@@ -84,7 +84,7 @@ input, select { font-family: inherit; }
 .admin-nav {
   background: #111827;
   color: #fff;
-  padding: 20px 0;
+  padding: 20px 0 12px;
   /* Sidebar tetap di tempat saat konten kanan discroll panjang ke bawah.
      align-self:start wajib — tanpa itu grid item stretch ikut setinggi
      baris (setinggi admin-content), dan sticky jadi tidak punya efek. */
@@ -92,10 +92,17 @@ input, select { font-family: inherit; }
   top: 0;
   align-self: start;
   height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
+  /* brand & tombol Keluar TETAP (flex-shrink:0 di masing2), cuma
+     .nav-scroll di tengah yang discroll — supaya Keluar selalu kelihatan
+     di bawah walau banyak grup menu dibuka sekaligus (lihat catatan di
+     App.jsx dekat .nav-scroll). */
+  display: flex;
+  flex-direction: column;
 }
-.admin-nav .brand { display: flex; align-items: center; justify-content: space-between; padding: 0 12px 20px 20px; font-weight: 700; font-size: 16px; }
+.admin-nav .brand { flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px 20px 20px; font-weight: 700; font-size: 16px; }
+.admin-nav .nav-scroll { flex: 1; overflow-y: auto; overflow-x: hidden; }
+.admin-nav > button { flex-shrink: 0; margin-top: 0; border-top: 1px solid #1f2937; padding-top: 14px; }
 .sidebar-collapsed .admin-nav .brand { padding: 0 8px 20px; justify-content: center; }
 .nav-collapse-toggle {
   background: none;
