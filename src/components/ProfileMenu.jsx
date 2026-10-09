@@ -91,21 +91,21 @@ function ChangePasswordModal({ onClose }) {
           <div style={{ marginBottom: 12 }}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Password Saat Ini</label>
             <input
-              className="input" type="password" value={currentPassword}
+              className="input" type="password" value={currentPassword} style={{ width: '100%' }}
               onChange={(e) => setCurrentPassword(e.target.value)} required autoFocus
             />
           </div>
           <div style={{ marginBottom: 12 }}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Password Baru (min 6 karakter)</label>
             <input
-              className="input" type="password" value={newPassword} minLength={6}
+              className="input" type="password" value={newPassword} minLength={6} style={{ width: '100%' }}
               onChange={(e) => setNewPassword(e.target.value)} required
             />
           </div>
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#555', marginBottom: 4 }}>Konfirmasi Password Baru</label>
             <input
-              className="input" type="password" value={confirmPassword} minLength={6}
+              className="input" type="password" value={confirmPassword} minLength={6} style={{ width: '100%' }}
               onChange={(e) => setConfirmPassword(e.target.value)} required
             />
           </div>
