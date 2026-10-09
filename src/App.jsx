@@ -40,67 +40,88 @@ import ClosePeriodScreen from './screens/ClosePeriodScreen.jsx';
 
 const DEFAULT_VIEW = 'products';
 
+// permission: [module, action] — HARUS sama persis dgn requirePermission()
+// di route GET/list yang dipanggil screen terkait saat pertama dibuka (lihat
+// catatan di filterNavGroups). Ini LAPISAN KENYAMANAN di atas penegakan
+// server yang sudah ada (requirePermission tiap route) — BUKAN pengganti.
+// Kalau filter ini salah/dilewati, API tetap menolak (403); efeknya cuma
+// user lihat menu yang ujungnya gagal, bukan celah keamanan.
 const NAV_GROUPS = [
   {
     label: 'Master Data',
     items: [
-      { key: 'products', label: 'Produk', icon: Package },
-      { key: 'categories', label: 'Kategori', icon: Folder },
-      { key: 'units', label: 'Satuan', icon: Ruler },
-      { key: 'priceLevels', label: 'Level Harga', icon: Tag },
-      { key: 'cashDenominations', label: 'Pecahan Uang', icon: Banknote },
-      { key: 'paymentMethods', label: 'Metode Pembayaran', icon: CreditCard },
+      { key: 'products', label: 'Produk', icon: Package, permission: ['products', 'edit'] },
+      { key: 'categories', label: 'Kategori', icon: Folder, permission: ['categories', 'view'] },
+      { key: 'units', label: 'Satuan', icon: Ruler, permission: ['units', 'view'] },
+      { key: 'priceLevels', label: 'Level Harga', icon: Tag, permission: ['price_levels', 'view'] },
+      { key: 'cashDenominations', label: 'Pecahan Uang', icon: Banknote, permission: ['cash_denominations', 'view'] },
+      { key: 'paymentMethods', label: 'Metode Pembayaran', icon: CreditCard, permission: ['payment_methods', 'view'] },
     ],
   },
   {
     label: 'Stok',
     items: [
-      { key: 'stock', label: 'Stok', icon: Warehouse },
-      { key: 'stockHistory', label: 'Riwayat Stok', icon: History },
-      { key: 'internalStockUsage', label: 'Pemakaian Internal', icon: PackageMinus },
-      { key: 'internalStockUsageHistory', label: 'Riwayat Pemakaian Internal', icon: History },
+      { key: 'stock', label: 'Stok', icon: Warehouse, permission: ['products', 'view'] },
+      { key: 'stockHistory', label: 'Riwayat Stok', icon: History, permission: ['products', 'view'] },
+      { key: 'internalStockUsage', label: 'Pemakaian Internal', icon: PackageMinus, permission: ['internal_stock_usage', 'create'] },
+      { key: 'internalStockUsageHistory', label: 'Riwayat Pemakaian Internal', icon: History, permission: ['internal_stock_usage', 'view'] },
     ],
   },
   {
     label: 'Administrasi',
     items: [
-      { key: 'users', label: 'Kelola Pengguna', icon: Users },
-      { key: 'roles', label: 'Kelola Role', icon: ShieldCheck },
-      { key: 'storeSettings', label: 'Pengaturan Toko', icon: Store },
-      { key: 'backups', label: 'Backup Database', icon: DatabaseBackup },
-      { key: 'sync', label: 'Sinkronisasi ke Pusat', icon: RefreshCw },
+      { key: 'users', label: 'Kelola Pengguna', icon: Users, permission: ['users', 'view'] },
+      { key: 'roles', label: 'Kelola Role', icon: ShieldCheck, permission: ['roles', 'view'] },
+      { key: 'storeSettings', label: 'Pengaturan Toko', icon: Store, permission: ['store_settings', 'view'] },
+      { key: 'backups', label: 'Backup Database', icon: DatabaseBackup, permission: ['backups', 'view'] },
+      { key: 'sync', label: 'Sinkronisasi ke Pusat', icon: RefreshCw, permission: ['sync', 'view'] },
     ],
   },
   {
     label: 'Pembelian',
     items: [
-      { key: 'suppliers', label: 'Supplier', icon: Truck },
-      { key: 'purchases', label: 'Pembelian', icon: ShoppingCart },
-      { key: 'purchaseHistory', label: 'Riwayat Pembelian', icon: History },
-      { key: 'purchaseHistoryByProduct', label: 'Riwayat Pembelian per Produk', icon: PackageSearch },
-      { key: 'purchaseReturns', label: 'Retur Pembelian', icon: RotateCcw },
-      { key: 'stockOpname', label: 'Stock Opname', icon: ClipboardCheck },
+      { key: 'suppliers', label: 'Supplier', icon: Truck, permission: ['suppliers', 'view'] },
+      { key: 'purchases', label: 'Pembelian', icon: ShoppingCart, permission: ['purchases', 'create'] },
+      { key: 'purchaseHistory', label: 'Riwayat Pembelian', icon: History, permission: ['purchases', 'view'] },
+      { key: 'purchaseHistoryByProduct', label: 'Riwayat Pembelian per Produk', icon: PackageSearch, permission: ['purchases', 'view'] },
+      { key: 'purchaseReturns', label: 'Retur Pembelian', icon: RotateCcw, permission: ['purchase_returns', 'view'] },
+      { key: 'stockOpname', label: 'Stock Opname', icon: ClipboardCheck, permission: ['stock_opnames', 'view'] },
     ],
   },
   {
     label: 'Akuntansi',
     items: [
-      { key: 'expenses', label: 'Beban & Prive', icon: Receipt },
-      { key: 'fixedAssets', label: 'Aset Tetap & Depresiasi', icon: Building },
-      { key: 'accountingReports', label: 'Laporan Keuangan', icon: BarChart },
-      { key: 'closePeriod', label: 'Tutup Buku', icon: Lock },
+      { key: 'expenses', label: 'Beban & Prive', icon: Receipt, permission: ['accounting', 'view'] },
+      { key: 'fixedAssets', label: 'Aset Tetap & Depresiasi', icon: Building, permission: ['accounting', 'view'] },
+      { key: 'accountingReports', label: 'Laporan Keuangan', icon: BarChart, permission: ['accounting', 'view'] },
+      { key: 'closePeriod', label: 'Tutup Buku', icon: Lock, permission: ['accounting', 'view'] },
     ],
   },
   {
     label: 'Laporan',
     items: [
-      { key: 'reports', label: 'Laporan Penjualan', icon: TrendingUp },
-      { key: 'transactionsReport', label: 'Laporan Transaksi', icon: FileText },
-      { key: 'salesReturns', label: 'Retur Penjualan', icon: RotateCcw },
-      { key: 'priceChangeNotifications', label: 'Notifikasi Harga', icon: Bell },
+      { key: 'reports', label: 'Laporan Penjualan', icon: TrendingUp, permission: ['reports', 'view'] },
+      { key: 'transactionsReport', label: 'Laporan Transaksi', icon: FileText, permission: ['reports', 'view'] },
+      { key: 'salesReturns', label: 'Retur Penjualan', icon: RotateCcw, permission: ['sales_returns', 'view'] },
+      { key: 'priceChangeNotifications', label: 'Notifikasi Harga', icon: Bell, permission: ['pricing_settings', 'view'] },
     ],
   },
 ];
+
+// isSuperadmin bypass total (konsisten dgn requirePermission di server).
+// Grup yang semua item-nya tersaring habis ikut disembunyikan (headernya
+// tidak berguna kalau kosong).
+function filterNavGroups(groups, user) {
+  if (!user) return [];
+  if (user.isSuperadmin) return groups;
+  const granted = new Set((user.permissions || []).map((p) => `${p.module}:${p.action}`));
+  return groups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => granted.has(`${item.permission[0]}:${item.permission[1]}`)),
+    }))
+    .filter((group) => group.items.length > 0);
+}
 
 // Grup yang memuat sebuah key nav — dipakai baik utk state awal (grup berisi
 // DEFAULT_VIEW terbuka duluan) maupun utk penanda "has-active" saat tertutup.
@@ -117,6 +138,40 @@ export default function App() {
   // Sidebar collapse — cuma UI, sama seperti openGroups di bawah sengaja
   // tidak persisten (reset tiap refresh), murni dikendalikan klik user.
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [openGroups, setOpenGroups] = useState({});
+  const [navReady, setNavReady] = useState(false);
+
+  // session awal (dari token di localStorage, lihat useState di atas) cuma
+  // punya token, belum ada user/permissions — ambil fresh lewat /me supaya
+  // menu tersaring benar setelah refresh halaman (bukan cuma setelah login
+  // baru, yang sudah dapat user lengkap langsung dari respons login).
+  useEffect(() => {
+    if (session && !session.user) {
+      api.me().then(({ user }) => setSession((s) => ({ ...s, user }))).catch(() => handleLogout());
+    }
+  }, [session]);
+
+  const navGroups = filterNavGroups(NAV_GROUPS, session?.user);
+
+  // Begitu daftar menu yang BOLEH dilihat user diketahui (login baru maupun
+  // setelah /me di atas selesai): kalau DEFAULT_VIEW/view saat ini bukan
+  // bagian dari itu (role terbatas, mis. cuma Laporan), pindah ke item
+  // pertama yang boleh — supaya tidak mendarat di layar yang langsung 403,
+  // dan supaya grup yang terbuka pertama kali sesuai itu juga. Jalan SEKALI
+  // per sesi (navReady), bukan tiap render / tiap ganti halaman manual.
+  useEffect(() => {
+    if (!session?.user || navReady) return;
+    const allowedKeys = navGroups.flatMap((g) => g.items.map((i) => i.key));
+    const initialView = allowedKeys.includes(DEFAULT_VIEW) ? DEFAULT_VIEW : allowedKeys[0];
+    if (initialView) {
+      setView(initialView);
+      const initialGroupLabel = findGroupLabelForKey(initialView);
+      const initial = {};
+      for (const group of navGroups) initial[group.label] = group.label === initialGroupLabel;
+      setOpenGroups(initial);
+    }
+    setNavReady(true);
+  }, [session?.user, navReady]);
 
   // Refresh badge notifikasi harga tiap kali pindah halaman (murah, 1 query
   // count) — supaya angkanya turun begitu admin selesai baca & tandai dibaca
@@ -125,19 +180,6 @@ export default function App() {
     if (!session) return;
     api.countUnreadPriceChangeNotifications().then((d) => setUnreadPriceCount(d.count)).catch(() => {});
   }, [session, view]);
-
-  // React state di level komponen navigasi — SENGAJA bukan localStorage
-  // (state cuma bertahan selama sesi, direset lagi kalau halaman di-refresh).
-  // Default: semua grup tertutup KECUALI grup yang berisi halaman aktif saat
-  // mount. Sesudah itu buka/tutup murni dikendalikan klik user — navigasi
-  // antar halaman tidak pernah menyentuh state ini lagi, jadi tidak "reset"
-  // tiap pindah halaman.
-  const [openGroups, setOpenGroups] = useState(() => {
-    const initialGroupLabel = findGroupLabelForKey(DEFAULT_VIEW);
-    const initial = {};
-    for (const group of NAV_GROUPS) initial[group.label] = group.label === initialGroupLabel;
-    return initial;
-  });
 
   function toggleGroup(label) {
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -151,10 +193,15 @@ export default function App() {
   function handleLogout() {
     setAuthToken(null);
     setSession(null);
+    setNavReady(false);
   }
 
   if (!session) {
     return <LoginScreen onLoggedIn={handleLoggedIn} />;
+  }
+
+  if (!session.user) {
+    return <div style={{ padding: 40, color: '#666' }}>Memuat...</div>;
   }
 
   return (
@@ -175,7 +222,7 @@ export default function App() {
           // Ciutkan: grup dilepas (tidak cukup ruang utk label grup), semua
           // item dari semua grup diratakan jadi satu rel ikon, label pindah
           // ke tooltip (title).
-          NAV_GROUPS.flatMap((group) => group.items).map((item) => {
+          navGroups.flatMap((group) => group.items).map((item) => {
             const Icon = item.icon;
             return (
               <button
@@ -193,7 +240,7 @@ export default function App() {
             );
           })
         ) : (
-          NAV_GROUPS.map((group) => {
+          navGroups.map((group) => {
             const isOpen = openGroups[group.label];
             const hasActive = group.items.some((item) => item.key === view);
             return (
