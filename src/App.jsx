@@ -220,71 +220,78 @@ export default function App() {
             {sidebarCollapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
           </button>
         </div>
-        {sidebarCollapsed ? (
-          // Ciutkan: grup dilepas (tidak cukup ruang utk label grup), semua
-          // item dari semua grup diratakan jadi satu rel ikon, label pindah
-          // ke tooltip (title).
-          navGroups.flatMap((group) => group.items).map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.key}
-                type="button"
-                className={`nav-icon-btn${view === item.key ? ' active' : ''}`}
-                onClick={() => { setView(item.key); setSelectedProductId(null); }}
-                title={item.label}
-              >
-                <Icon size={18} />
-                {item.key === 'priceChangeNotifications' && unreadPriceCount > 0 && (
-                  <span className="nav-icon-badge">{unreadPriceCount}</span>
-                )}
-              </button>
-            );
-          })
-        ) : (
-          navGroups.map((group) => {
-            const isOpen = openGroups[group.label];
-            const hasActive = group.items.some((item) => item.key === view);
-            return (
-              <div className="nav-group" key={group.label}>
+        {/* Area menu discroll SENDIRI, terpisah dari brand & tombol Keluar —
+            supaya Keluar selalu kelihatan di bawah walau banyak grup dibuka
+            sekaligus dan totalnya lebih tinggi dari layar (sebelumnya Keluar
+            ikut terdorong keluar viewport, cuma bisa dijangkau dgn scroll
+            sidebar yang tidak terlihat ada scrollbar-nya). */}
+        <div className="nav-scroll">
+          {sidebarCollapsed ? (
+            // Ciutkan: grup dilepas (tidak cukup ruang utk label grup), semua
+            // item dari semua grup diratakan jadi satu rel ikon, label pindah
+            // ke tooltip (title).
+            navGroups.flatMap((group) => group.items).map((item) => {
+              const Icon = item.icon;
+              return (
                 <button
+                  key={item.key}
                   type="button"
-                  className={`nav-group-header${hasActive ? ' has-active' : ''}`}
-                  onClick={() => toggleGroup(group.label)}
-                  aria-expanded={isOpen}
+                  className={`nav-icon-btn${view === item.key ? ' active' : ''}`}
+                  onClick={() => { setView(item.key); setSelectedProductId(null); }}
+                  title={item.label}
                 >
-                  <span>{group.label}</span>
-                  <ChevronRight size={14} className={`nav-group-chevron${isOpen ? ' open' : ''}`} />
+                  <Icon size={18} />
+                  {item.key === 'priceChangeNotifications' && unreadPriceCount > 0 && (
+                    <span className="nav-icon-badge">{unreadPriceCount}</span>
+                  )}
                 </button>
-                {isOpen && (
-                  <div className="nav-group-items">
-                    {group.items.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <button
-                          key={item.key}
-                          className={view === item.key ? 'active' : ''}
-                          onClick={() => { setView(item.key); setSelectedProductId(null); }}
-                        >
-                          <Icon size={16} className="nav-item-icon" />
-                          <span>{item.label}</span>
-                          {item.key === 'priceChangeNotifications' && unreadPriceCount > 0 && (
-                            <span className="badge active" style={{ marginLeft: 'auto' }}>{unreadPriceCount}</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })
-        )}
+              );
+            })
+          ) : (
+            navGroups.map((group) => {
+              const isOpen = openGroups[group.label];
+              const hasActive = group.items.some((item) => item.key === view);
+              return (
+                <div className="nav-group" key={group.label}>
+                  <button
+                    type="button"
+                    className={`nav-group-header${hasActive ? ' has-active' : ''}`}
+                    onClick={() => toggleGroup(group.label)}
+                    aria-expanded={isOpen}
+                  >
+                    <span>{group.label}</span>
+                    <ChevronRight size={14} className={`nav-group-chevron${isOpen ? ' open' : ''}`} />
+                  </button>
+                  {isOpen && (
+                    <div className="nav-group-items">
+                      {group.items.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <button
+                            key={item.key}
+                            className={view === item.key ? 'active' : ''}
+                            onClick={() => { setView(item.key); setSelectedProductId(null); }}
+                          >
+                            <Icon size={16} className="nav-item-icon" />
+                            <span>{item.label}</span>
+                            {item.key === 'priceChangeNotifications' && unreadPriceCount > 0 && (
+                              <span className="badge active" style={{ marginLeft: 'auto' }}>{unreadPriceCount}</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
         <button
           type="button"
           className={sidebarCollapsed ? 'nav-icon-btn' : ''}
           onClick={handleLogout}
-          style={sidebarCollapsed ? { color: '#fca5a5', marginTop: 8 } : { marginTop: 20, color: '#fca5a5' }}
+          style={{ color: '#fca5a5' }}
           title="Keluar"
         >
           {sidebarCollapsed ? <LogOut size={18} /> : 'Keluar'}
