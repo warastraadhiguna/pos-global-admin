@@ -144,8 +144,9 @@ export default function App() {
 
   // session awal (dari token di localStorage, lihat useState di atas) cuma
   // punya token, belum ada user/permissions — ambil fresh lewat /me supaya
-  // menu tersaring benar setelah refresh halaman (bukan cuma setelah login
-  // baru, yang sudah dapat user lengkap langsung dari respons login).
+  // menu tersaring benar & ProfileMenu (nama/role) tampil benar setelah
+  // refresh halaman (bukan cuma setelah login baru, yang sudah dapat user
+  // lengkap langsung dari respons login).
   useEffect(() => {
     if (session && !session.user) {
       api.me().then(({ user }) => setSession((s) => ({ ...s, user }))).catch(() => handleLogout());
@@ -173,17 +174,6 @@ export default function App() {
     }
     setNavReady(true);
   }, [session?.user, navReady]);
-
-  // session awal dari token di localStorage (lihat useState di atas) cuma
-  // punya token, belum ada user — baru keisi lewat handleLoggedIn setelah
-  // login BARU. Setelah refresh halaman (token lama dipakai lagi), user
-  // masih kosong sampai /me ini selesai — ProfileMenu butuh user.full_name/
-  // role, jadi ditunda render sampai ini kelar (lihat guard di bawah).
-  useEffect(() => {
-    if (session && !session.user) {
-      api.me().then(({ user }) => setSession((s) => ({ ...s, user }))).catch(() => handleLogout());
-    }
-  }, [session]);
 
   // Refresh badge notifikasi harga tiap kali pindah halaman (murah, 1 query
   // count) — supaya angkanya turun begitu admin selesai baca & tandai dibaca
