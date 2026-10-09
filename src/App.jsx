@@ -119,6 +119,17 @@ export default function App() {
   // tidak persisten (reset tiap refresh), murni dikendalikan klik user.
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  // session awal dari token di localStorage (lihat useState di atas) cuma
+  // punya token, belum ada user — baru keisi lewat handleLoggedIn setelah
+  // login BARU. Setelah refresh halaman (token lama dipakai lagi), user
+  // masih kosong sampai /me ini selesai — ProfileMenu butuh user.full_name/
+  // role, jadi ditunda render sampai ini kelar (lihat guard di bawah).
+  useEffect(() => {
+    if (session && !session.user) {
+      api.me().then(({ user }) => setSession((s) => ({ ...s, user }))).catch(() => handleLogout());
+    }
+  }, [session]);
+
   // Refresh badge notifikasi harga tiap kali pindah halaman (murah, 1 query
   // count) — supaya angkanya turun begitu admin selesai baca & tandai dibaca
   // di halaman Notifikasi Harga, bukan cuma saat app baru dibuka.
@@ -156,6 +167,10 @@ export default function App() {
 
   if (!session) {
     return <LoginScreen onLoggedIn={handleLoggedIn} />;
+  }
+
+  if (!session.user) {
+    return <div style={{ padding: 40, color: '#666' }}>Memuat...</div>;
   }
 
   return (
