@@ -312,3 +312,21 @@ th { color: #555; font-size: 12px; text-transform: uppercase; letter-spacing: 0.
   line-height: 1;
 }
 .modal-close-btn:hover { color: #333; }
+
+/* Cetak lembar (mis. acuan hitung fisik Stock Opname — lihat StockScreen.jsx)
+   — .print-header cuma muncul saat dicetak (kop toko+tanggal), .no-print
+   cuma disembunyikan saat dicetak (kontrol interaktif: tombol, search,
+   penjelasan). Sidebar & topbar disembunyikan juga supaya kertas cuma
+   berisi konten, bukan UI aplikasi. */
+.print-header { display: none; }
+@media print {
+  body { background: #fff; }
+  .admin-nav, .admin-topbar, .no-print { display: none !important; }
+  .admin-layout { display: block; }
+  .admin-main { height: auto; }
+  .admin-content { padding: 0; }
+  .card { box-shadow: none; padding: 0; }
+  .print-header { display: block; margin-bottom: 16px; }
+  table { font-size: 12px; }
+  th, td { padding: 6px 8px; }
+}
