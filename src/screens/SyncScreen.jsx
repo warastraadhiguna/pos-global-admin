@@ -10,6 +10,8 @@ export default function SyncScreen() {
   const [settings, setSettings] = useState(null);
   const [salesPending, setSalesPending] = useState(0);
   const [salesReturnsPending, setSalesReturnsPending] = useState(0);
+  const [purchasesPending, setPurchasesPending] = useState(0);
+  const [purchaseReturnsPending, setPurchaseReturnsPending] = useState(0);
   const [error, setError] = useState(null);
   const [info, setInfo] = useState(null);
 
@@ -25,6 +27,8 @@ export default function SyncScreen() {
         setSettings(d.settings);
         setSalesPending(d.salesPending);
         setSalesReturnsPending(d.salesReturnsPending);
+        setPurchasesPending(d.purchasesPending);
+        setPurchaseReturnsPending(d.purchaseReturnsPending);
         setEnabled(!!d.settings.enabled);
         setIntervalMinutes(d.settings.interval_minutes);
         setBatchSize(d.settings.batch_size);
@@ -55,7 +59,10 @@ export default function SyncScreen() {
     setInfo(null);
     try {
       const { result } = await api.runSyncNow();
-      setInfo(`Sync selesai — ${result.sales} transaksi, ${result.salesReturns} retur terkirim`);
+      setInfo(
+        `Sync selesai — ${result.sales} transaksi, ${result.salesReturns} retur jual, ` +
+        `${result.purchases} pembelian, ${result.purchaseReturns} retur beli terkirim`
+      );
       reload();
     } catch (err) {
       setError(err.message);
@@ -125,6 +132,8 @@ export default function SyncScreen() {
             <tbody>
               <tr><td>Transaksi penjualan</td><td style={{ textAlign: 'right', fontWeight: 600 }}>{salesPending}</td></tr>
               <tr><td>Retur penjualan</td><td style={{ textAlign: 'right', fontWeight: 600 }}>{salesReturnsPending}</td></tr>
+              <tr><td>Pembelian</td><td style={{ textAlign: 'right', fontWeight: 600 }}>{purchasesPending}</td></tr>
+              <tr><td>Retur pembelian</td><td style={{ textAlign: 'right', fontWeight: 600 }}>{purchaseReturnsPending}</td></tr>
             </tbody>
           </table>
           <button className="btn-primary" onClick={runNow} disabled={runningNow}>
